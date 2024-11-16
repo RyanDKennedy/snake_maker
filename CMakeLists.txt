@@ -1,8 +1,21 @@
 cmake_minimum_required(VERSION 3.22.1)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 
-set(SOURCE_FILES
+project(snake_maker)
+
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIRS})
+
+set( GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
+set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
+set( GLAD_GL "" )
+
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/external/glfw)
+
+
+
+add_executable(${PROJECT_NAME}
   src/main.cpp
   src/glad.c
   src/quad.cpp
@@ -14,15 +27,11 @@ set(SOURCE_FILES
   src/pixel_map.cpp
 )
 
-project(snake_maker)
-
-find_package(OpenGL REQUIRED)
-
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-
 target_include_directories(${PROJECT_NAME}
 	PUBLIC
        ${CMAKE_SOURCE_DIR}/include/
        ${CMAKE_SOURCE_DIR}/src/
 )
+
 target_link_libraries(${PROJECT_NAME} glfw)
+
