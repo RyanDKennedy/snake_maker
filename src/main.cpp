@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstring>
+#include <chrono>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -15,8 +16,8 @@
 
 int main(void)
 {
-    const int win_width = 400;
-    const int win_height = 400;
+    const int win_width = 800;
+    const int win_height = 800;
 
     // GLFW Configuration
     glfwInit();
@@ -42,8 +43,6 @@ int main(void)
     // Viewport settings
     glViewport(0, 0, win_width, win_height);
 
-    float clear_color[4] = {0.0, 0.0, 0.0, 0.0};
-
     Shader shader("../shaders/quad.vert", "../shaders/quad.frag");
     Quad quad;
 
@@ -64,18 +63,29 @@ int main(void)
 
     init_fonts();
 
-    Vec2i pos = {50, 370};
-    draw_sentence(&pixel_map, "snake maker", 8, 2, pos);
-
-    Vec2i pos1 = {0, 50};
-    draw_sentence(&pixel_map, "abcdefghijklmnopqrstuvwxyz", 8, 1, pos1);
-
+    std::chrono::system_clock::time_point time_start;
+    std::chrono::system_clock::time_point time_end;
+    time_start = std::chrono::high_resolution_clock::now();
+    double delta_time;
 
     // Render Loop
     while(!glfwWindowShouldClose(window))
     {
+	time_end = std::chrono::high_resolution_clock::now();
+	delta_time = std::chrono::duration<double>(time_end-time_start).count();
+	time_start = time_end;
+	
 	// Clear
-        glClearBufferfv(GL_COLOR, 0, clear_color);
+	memset(pixel_map.data, 0, pixel_map.size * sizeof(RGBPixel));
+
+	// Draw Top Bar
+	draw_rectangle(&pixel_map, 800, 50, (Vec2i){0, 800-50}, (Vec3i){50, 50, 50});
+	draw_sentence(&pixel_map, "snake maker", 8, 3, (Vec2i){30, 760}, (Vec3i){0, 255, 0});
+	char buf[255];
+	memset(buf, 0, 255);
+	snprintf(buf, 255, "fps %.2lf", 1.0 / delta_time);
+	draw_sentence(&pixel_map, buf, 8, 3, (Vec2i){550, 760}, (Vec3i){255, 0, 0});
+
 
 	// Drawing
 	glTextureSubImage2D(tex, 0, 0, 0, pixel_map.width, pixel_map.height, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
