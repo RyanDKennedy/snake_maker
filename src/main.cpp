@@ -88,9 +88,9 @@ int main(void)
     void* specific_context = (void*)menu_start(&generic_context);
 
     // Loop variables
-    std::chrono::system_clock::time_point time_start;
-    std::chrono::system_clock::time_point time_end;
-    time_start = std::chrono::high_resolution_clock::now();
+	auto time_start = std::chrono::high_resolution_clock::now();
+	auto time_end = std::chrono::high_resolution_clock::now();
+   
 
     // Render Loop
     while(!glfwWindowShouldClose(window))
@@ -180,12 +180,12 @@ int main(void)
 	}
 
 	// Draw Top Bar
-	draw_rectangle(&pixel_map, 800, 50, (Vec2i){0, 800-50}, (Vec3i){50, 50, 50});
-	draw_sentence(&pixel_map, "snake maker", 8, 3, (Vec2i){30, 760}, (Vec3i){0, 255, 0});
+	draw_rectangle(&pixel_map, 800, 50, Vec2i{0, 800-50}, Vec3i{50, 50, 50});
+	draw_sentence(&pixel_map, "snake maker", 8, 3, Vec2i{30, 760}, Vec3i{0, 255, 0});
 	char buf[255];
 	memset(buf, 0, 255);
 	snprintf(buf, 255, "fps %.2lf", 1.0 / generic_context.delta_time);
-	draw_sentence(&pixel_map, buf, 8, 3, (Vec2i){550, 760}, (Vec3i){255, 0, 0});
+	draw_sentence(&pixel_map, buf, 8, 3, Vec2i{550, 760}, Vec3i{255, 0, 0});
 
 
 	// Drawing the pixmap onto the screen

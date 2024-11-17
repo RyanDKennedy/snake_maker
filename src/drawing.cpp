@@ -84,7 +84,7 @@ void draw_sentence(PixelMap *pixel_map, const char *sentence, int font_size, int
     int xval = pos[0];
     for (int i = 0; i < strlen(sentence); ++i)
     {
-	draw_letter(pixel_map, sentence[i], font_size, font_mag, (Vec2i){xval, pos[1]}, color);
+	draw_letter(pixel_map, sentence[i], font_size, font_mag, Vec2i{xval, pos[1]}, color);
 	xval += (font_size * font_mag) + 1;
     }
 }
