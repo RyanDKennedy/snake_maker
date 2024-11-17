@@ -7,6 +7,7 @@ struct GenericCtx
 {
     bool mouse_clicked;
     Vec2i mouse_pos;
+    double mouse_scroll;
     double delta_time;
     GameState game_state;
     struct
@@ -19,4 +20,6 @@ struct GenericCtx
 	bool enter;
 	bool backspace;
     } keyboard;
+
+
 };

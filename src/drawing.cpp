@@ -1,8 +1,10 @@
 #include "drawing.hpp"
+#include "pixel.hpp"
 
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
+#include <cstdio>
 
 void draw_letter(PixelMap *pixel_map, char letter, int font_size, int font_mag, Vec2i pos, Vec3i color)
 {
@@ -56,6 +58,11 @@ void draw_letter(PixelMap *pixel_map, char letter, int font_size, int font_mag, 
 	{
 	    if (font_bitmap[h * font_size + w] == '1')
 	    {
+		const int x = pos[0] + w;
+		const int y = (font_size - h) + pos[1];
+		if (x < 0 || x >= pixel_map->width || y < 0 || y >= pixel_map->height)
+		    continue;
+		
 		int base = pos[0] + pos[1] * pixel_map->width;
 		const int index = (font_size - h) * pixel_map->width + w + base;
 		pixel_map->data[index].r = color[0];
@@ -88,6 +95,9 @@ void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i
     {
 	for (int x = pos[0]; x < pos[0] + width; ++x)
 	{
+	    if (x < 0 || x >= pixel_map->width || y < 0 || y >= pixel_map->height)
+		continue;
+
 	    pixel_map->data[y * pixel_map->width + x].r = color[0];
 	    pixel_map->data[y * pixel_map->width + x].g = color[1];
 	    pixel_map->data[y * pixel_map->width + x].b = color[2];
@@ -98,12 +108,6 @@ void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i
 
 void draw_button(PixelMap *pixel_map, Button *button, bool hover)
 {
-    if (button->col_box.bottom_left[0] < 0 || button->col_box.bottom_left[1] < 0 ||
-        button->col_box.top_right[1] > pixel_map->height || button->col_box.top_right[0] > pixel_map->width)
-    {
-	return;
-    }
-
     Vec2i text_pos;
     text_pos[0] = button->col_box.bottom_left[0] + button->font_size * button->font_mag;
     text_pos[1] = button->col_box.bottom_left[1] + (button->height  - (button->font_size * button->font_mag)) / 2;
@@ -121,6 +125,29 @@ void draw_button(PixelMap *pixel_map, Button *button, bool hover)
 	memcpy(fg, button->fg_color, sizeof(Vec3i));
     }
 
+    // truncate text
+    char text[255];
+    const int char_size = button->font_size * button->font_mag;
+    snprintf(text, (button->width - 2*char_size) /  char_size + 1, "%s", button->text);
+
     draw_rectangle(pixel_map, button->width, button->height, button->col_box.bottom_left, bg);
-    draw_sentence(pixel_map, button->text, button->font_size, button->font_mag, text_pos, fg);
+    draw_sentence(pixel_map, text, button->font_size, button->font_mag, text_pos, fg);
+}
+
+void draw_pixmap(PixelMap *dest, PixelMap *src, Vec2i pos)
+{
+    for (int y = 0; y < src->height; ++y)
+    {
+	for (int x = 0; x < src->width; ++x)
+	{
+	    Vec2i dest_pos = {pos[0] + x, pos[1] + y};
+	    if (dest_pos[0] < 0 || dest_pos[0] >= dest->width || dest_pos[1] < 0 || dest_pos[1] >= dest->height)
+		continue;
+	    
+	    memcpy(&dest->data[dest_pos[0] + dest_pos[1] * dest->width], &src->data[x + y * src->width], sizeof(RGBPixel));
+	}
+
+    }
+
+
 }

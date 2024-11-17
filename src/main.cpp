@@ -18,6 +18,9 @@
 #include "context.hpp"
 #include "menu.hpp"
 
+double scroll_y_offset = 0.0;
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
 int main(void)
 {
     const int win_width = 800;
@@ -36,6 +39,8 @@ int main(void)
     }
     glfwMakeContextCurrent(window);
     glfwSwapInterval(true); // turns on vsync
+    glfwSetScrollCallback(window, scroll_callback);
+
 
     // Load the opengl functions
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -70,6 +75,7 @@ int main(void)
     generic_context.mouse_pos[0] = 0;
     generic_context.mouse_pos[1] = 0;
     generic_context.mouse_clicked = false;
+    generic_context.mouse_scroll = scroll_y_offset;
     generic_context.keyboard.w = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);
     generic_context.keyboard.a = (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
     generic_context.keyboard.s = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
@@ -77,7 +83,6 @@ int main(void)
     generic_context.keyboard.space = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
     generic_context.keyboard.enter = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
     generic_context.keyboard.backspace = (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
-
 
     // Initialize specific_context
     void* specific_context = (void*)menu_start(&generic_context);
@@ -112,6 +117,7 @@ int main(void)
 	generic_context.keyboard.space = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
 	generic_context.keyboard.enter = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
 	generic_context.keyboard.backspace = (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
+	generic_context.mouse_scroll = scroll_y_offset;
 	
 	// Clear
 	memset(pixel_map.data, 0, pixel_map.size * sizeof(RGBPixel));
@@ -135,14 +141,19 @@ int main(void)
 	    }
 	}
 
+	char menu_result[255] = {0};
 	// End the current context if specified in return code
 	if (return_code != GameReturnCode::none)
 	{
 	    switch (generic_context.game_state)
 	    {
 		case GameState::menu:
-		    menu_end((MenuCtx*)specific_context);
+		{
+		    MenuCtx *menu_ctx = (MenuCtx*)specific_context;
+		    strcpy(menu_result, menu_ctx->available_maps[menu_ctx->selected_map].text);
+		    menu_end(menu_ctx);
 		    break;
+		}
 		case GameState::snake:
 		    break;
 		case GameState::scoreboard:
@@ -160,6 +171,7 @@ int main(void)
 	    }
 	    case GameReturnCode::play_snake:
 	    {
+		printf("loading map: %s\n", menu_result);
 		specific_context = NULL; // snake_start
 		generic_context.game_state = GameState::snake;
 		break;
@@ -183,6 +195,9 @@ int main(void)
 	glUniform1i(glGetUniformLocation(shader.m_program, "u_tex"), 0);
 	quad.draw();
 
+	// Reset variables that are set by input callbacks
+	scroll_y_offset = 0.0;
+
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
@@ -192,4 +207,7 @@ int main(void)
     return 0;
 }
 
-
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    scroll_y_offset = yoffset;
+}

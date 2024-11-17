@@ -16,8 +16,9 @@ struct MenuCtx
     Button *available_maps;
     int available_maps_amt;
     int selected_map;
-    
-
+    PixelMap map_selector_pixel_map;
+    double map_selector_scroll_amt;
+    double min_scroll;
 };
 
 MenuCtx* menu_start(GenericCtx *generic_context);
