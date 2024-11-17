@@ -87,18 +87,19 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
 
 	// scroll wheel controls
 	menu_ctx->map_selector_scroll_amt -= 30 * generic_ctx->mouse_scroll;
-	
-	// top bounds
-	if (menu_ctx->map_selector_scroll_amt < menu_ctx->min_scroll)
-	{
-	    menu_ctx->map_selector_scroll_amt = menu_ctx->min_scroll;
-	}
 
 	// lower bounds
 	if(menu_ctx->map_selector_scroll_amt > 20.0)
 	{
 	    menu_ctx->map_selector_scroll_amt = 20.0; 
 	}
+
+	// top bounds
+	if (menu_ctx->map_selector_scroll_amt < menu_ctx->min_scroll)
+	{
+	    menu_ctx->map_selector_scroll_amt = menu_ctx->min_scroll;
+	}
+
     }
 
     // Draw the map selector
