@@ -1,6 +1,7 @@
 #include "menu.hpp"
 #include "button.hpp"
 #include "collisions.hpp"
+#include "common.hpp"
 #include "game_state.hpp"
 #include "math_types.hpp"
 
@@ -160,9 +161,9 @@ void menu_fill_maps(MenuCtx *menu_ctx)
 	if (entry.is_regular_file())
 	{
 	    
-		std::string path_name_str = entry.path().string();
-		const char* path_name = path_name_str.c_str();
-	    if (strlen(path_name) >= 6 && memcmp(path_name + (strlen(path_name) - 6), ".snake", strlen(".snake")) == 0)
+	    std::string path_name_str = entry.path().string();
+	    const char* path_name = path_name_str.c_str();
+	    if (strlen(path_name) >= strlen(g_map_file_extension) && memcmp(path_name + (strlen(path_name) - strlen(g_map_file_extension)), g_map_file_extension, strlen(g_map_file_extension)) == 0)
 	    {
 		++menu_ctx->available_maps_amt;
 	    }
@@ -176,9 +177,9 @@ void menu_fill_maps(MenuCtx *menu_ctx)
     {
 	if (entry.is_regular_file())
 	{
-		std::string path_name_str = entry.path().string();
+	    std::string path_name_str = entry.path().string();
 	    const char *path_name = path_name_str.c_str();
-	    if (strlen(path_name) >= 6 && memcmp(path_name + (strlen(path_name) - 6), ".snake", strlen(".snake")) == 0)
+	    if (strlen(path_name) >= strlen(g_map_file_extension) && memcmp(path_name + (strlen(path_name) - strlen(g_map_file_extension)), g_map_file_extension, strlen(g_map_file_extension)) == 0)
 	    {
 		
 		const char *path = strrchr(path_name, '/') + 1;

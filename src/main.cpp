@@ -135,6 +135,7 @@ int main(void)
 	    }
 	    case GameState::snake:
 	    {
+		return_code = snake_run(&pixel_map, &generic_context, (SnakeCtx*)specific_context);
 		break;
 	    }
 	    case GameState::scoreboard:
@@ -173,7 +174,6 @@ int main(void)
 	    }
 	    case GameReturnCode::play_snake:
 	    {
-		printf("loading map: %s\n", menu_result);
 		specific_context = (SnakeCtx*)snake_start(&generic_context, menu_result);
 		generic_context.game_state = GameState::snake;
 		break;
