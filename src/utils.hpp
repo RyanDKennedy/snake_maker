@@ -2,7 +2,6 @@
 #include <sstream>
 #include <fstream>
 
-namespace rdk
-{
-    std::string read_file(std::string path, bool &error);
-}
+
+std::string read_file(const char *path, bool *error);
+

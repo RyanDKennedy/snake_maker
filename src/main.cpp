@@ -40,7 +40,7 @@ int main(void)
         return 1;
     }
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(true); // turns on vsync
+//    glfwSwapInterval(true); // turns on vsync
     glfwSetScrollCallback(window, scroll_callback);
 
 
