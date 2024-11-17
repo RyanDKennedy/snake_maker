@@ -7,3 +7,9 @@ enum class GameState
     snake,
     scoreboard,
 };
+
+enum class GameReturnCode
+{
+    none,
+    play_snake,
+};

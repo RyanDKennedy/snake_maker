@@ -27,6 +27,7 @@ add_executable(${PROJECT_NAME}
   src/pixel_map.cpp
   src/collisions.cpp
   src/button.cpp
+  src/menu.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

@@ -15,6 +15,8 @@
 #include "game_state.hpp"
 #include "collisions.hpp"
 #include "button.hpp"
+#include "context.hpp"
+#include "menu.hpp"
 
 int main(void)
 {
@@ -34,8 +36,8 @@ int main(void)
     }
     glfwMakeContextCurrent(window);
     glfwSwapInterval(true); // turns on vsync
-    glfwSetWindowAspectRatio(window, win_width, win_height);
 
+    // Load the opengl functions
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         glfwTerminate();
@@ -62,16 +64,20 @@ int main(void)
     // Fonts
     init_fonts();
 
-    GameState game_state = GameState::menu;
+    // Initialize generic_context
+    GenericCtx generic_context;
+    generic_context.game_state = GameState::menu;
+    generic_context.mouse_pos[0] = 0;
+    generic_context.mouse_pos[1] = 0;
+    generic_context.mouse_clicked = false;
 
-    Button button = create_button("test msg", 250, 50, (Vec2i){50, 50}, (Vec3i){255, 255, 255}, (Vec3i){50, 50, 50}, 8, 2);
-    memcpy(button.bg_hover_color, (Vec3i){50, 50, 50}, sizeof(Vec3i));
-    memcpy(button.fg_hover_color, (Vec3i){255, 255, 255}, sizeof(Vec3i));
+    // Initialize specific_context
+    void* specific_context = (void*)menu_start(&generic_context);
 
+    // Loop variables
     std::chrono::system_clock::time_point time_start;
     std::chrono::system_clock::time_point time_end;
     time_start = std::chrono::high_resolution_clock::now();
-    double delta_time;
 
     // Render Loop
     while(!glfwWindowShouldClose(window))
@@ -79,9 +85,19 @@ int main(void)
 
 	// Calculate delta time
 	time_end = std::chrono::high_resolution_clock::now();
-	delta_time = std::chrono::duration<double>(time_end-time_start).count();
+	generic_context.delta_time = std::chrono::duration<double>(time_end-time_start).count();
 	time_start = time_end;
 	
+	// Fill generic context
+	{
+	    double xpos, ypos;
+	    glfwGetCursorPos(window, &xpos, &ypos);
+	    ypos = win_height - ypos;
+	    generic_context.mouse_pos[0] = (int)xpos;
+	    generic_context.mouse_pos[1] = (int)ypos;
+	}	
+	generic_context.mouse_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)? true : false;
+
 	// Clear
 	memset(pixel_map.data, 0, pixel_map.size * sizeof(RGBPixel));
 
@@ -90,30 +106,46 @@ int main(void)
 	draw_sentence(&pixel_map, "snake maker", 8, 3, (Vec2i){30, 760}, (Vec3i){0, 255, 0});
 	char buf[255];
 	memset(buf, 0, 255);
-	snprintf(buf, 255, "fps %.2lf", 1.0 / delta_time);
+	snprintf(buf, 255, "fps %.2lf", 1.0 / generic_context.delta_time);
 	draw_sentence(&pixel_map, buf, 8, 3, (Vec2i){550, 760}, (Vec3i){255, 0, 0});
 
-
-
-	switch (game_state)
+	// Do action for the specified mode/state
+	GameReturnCode return_code = GameReturnCode::none;
+	switch (generic_context.game_state)
 	{
 	    case GameState::menu:
 	    {
-		double xpos, ypos;
-		glfwGetCursorPos(window, &xpos, &ypos);
-		ypos = win_height - ypos;
-
-		draw_button(&pixel_map, &button, is_inside_collision_box(&button.col_box, (Vec2i){(int)xpos, (int)ypos}));
+		return_code = menu_run(&pixel_map, &generic_context, (MenuCtx*)specific_context);
+		break;
 	    }
-
-		break;
 	    case GameState::snake:
+	    {
 		break;
+	    }
 	    case GameState::scoreboard:
+	    {
 		break;
+	    }
 	}
 
-	// Drawing
+	// Parse the return code
+	switch(return_code)
+	{
+	    case GameReturnCode::none:
+	    {
+		break;
+	    }
+	    case GameReturnCode::play_snake:
+	    {
+		free(specific_context);
+		specific_context = NULL;
+		generic_context.game_state = GameState::snake;
+		break;
+	    }
+
+	}
+
+	// Drawing the pixmap onto the screen
 	glTextureSubImage2D(tex, 0, 0, 0, pixel_map.width, pixel_map.height, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
 	shader.use();
 	glBindTextureUnit(0, tex);
