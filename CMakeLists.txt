@@ -25,6 +25,8 @@ add_executable(${PROJECT_NAME}
   src/custom_fonts.cpp
   src/drawing.cpp
   src/pixel_map.cpp
+  src/collisions.cpp
+  src/button.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

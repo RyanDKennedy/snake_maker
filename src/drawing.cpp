@@ -74,10 +74,11 @@ void draw_letter(PixelMap *pixel_map, char letter, int font_size, int font_mag, 
 
 void draw_sentence(PixelMap *pixel_map, const char *sentence, int font_size, int font_mag, Vec2i pos, Vec3i color)
 {
+    int xval = pos[0];
     for (int i = 0; i < strlen(sentence); ++i)
     {
-	draw_letter(pixel_map, sentence[i], font_size, font_mag, pos, color);
-	pos[0] += (font_size * font_mag) + 1;
+	draw_letter(pixel_map, sentence[i], font_size, font_mag, (Vec2i){xval, pos[1]}, color);
+	xval += (font_size * font_mag) + 1;
     }
 }
 
@@ -93,4 +94,27 @@ void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i
 	}
     }
 
+}
+
+void draw_button(PixelMap *pixel_map, Button *button, bool hover)
+{
+    Vec2i text_pos;
+    text_pos[0] = button->col_box.bottom_left[0] + button->font_size * button->font_mag;
+    text_pos[1] = button->col_box.bottom_left[1] + (button->height  - (button->font_size * button->font_mag)) / 2;
+
+    Vec3i bg;
+    Vec3i fg;
+    if (hover)
+    {
+	memcpy(bg, button->bg_hover_color, sizeof(Vec3i));
+	memcpy(fg, button->fg_hover_color, sizeof(Vec3i));
+    }
+    else
+    {
+	memcpy(bg, button->bg_color, sizeof(Vec3i));
+	memcpy(fg, button->fg_color, sizeof(Vec3i));
+    }
+
+    draw_rectangle(pixel_map, button->width, button->height, button->col_box.bottom_left, bg);
+    draw_sentence(pixel_map, button->text, button->font_size, button->font_mag, text_pos, fg);
 }
