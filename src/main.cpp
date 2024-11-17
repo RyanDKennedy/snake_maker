@@ -70,6 +70,14 @@ int main(void)
     generic_context.mouse_pos[0] = 0;
     generic_context.mouse_pos[1] = 0;
     generic_context.mouse_clicked = false;
+    generic_context.keyboard.w = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);
+    generic_context.keyboard.a = (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
+    generic_context.keyboard.s = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
+    generic_context.keyboard.d = (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS);
+    generic_context.keyboard.space = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
+    generic_context.keyboard.enter = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
+    generic_context.keyboard.backspace = (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
+
 
     // Initialize specific_context
     void* specific_context = (void*)menu_start(&generic_context);
@@ -96,18 +104,17 @@ int main(void)
 	    generic_context.mouse_pos[0] = (int)xpos;
 	    generic_context.mouse_pos[1] = (int)ypos;
 	}	
-	generic_context.mouse_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)? true : false;
-
+	generic_context.mouse_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+	generic_context.keyboard.w = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);
+	generic_context.keyboard.a = (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
+	generic_context.keyboard.s = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
+	generic_context.keyboard.d = (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS);
+	generic_context.keyboard.space = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
+	generic_context.keyboard.enter = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
+	generic_context.keyboard.backspace = (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
+	
 	// Clear
 	memset(pixel_map.data, 0, pixel_map.size * sizeof(RGBPixel));
-
-	// Draw Top Bar
-	draw_rectangle(&pixel_map, 800, 50, (Vec2i){0, 800-50}, (Vec3i){50, 50, 50});
-	draw_sentence(&pixel_map, "snake maker", 8, 3, (Vec2i){30, 760}, (Vec3i){0, 255, 0});
-	char buf[255];
-	memset(buf, 0, 255);
-	snprintf(buf, 255, "fps %.2lf", 1.0 / generic_context.delta_time);
-	draw_sentence(&pixel_map, buf, 8, 3, (Vec2i){550, 760}, (Vec3i){255, 0, 0});
 
 	// Do action for the specified mode/state
 	GameReturnCode return_code = GameReturnCode::none;
@@ -128,6 +135,22 @@ int main(void)
 	    }
 	}
 
+	// End the current context if specified in return code
+	if (return_code != GameReturnCode::none)
+	{
+	    switch (generic_context.game_state)
+	    {
+		case GameState::menu:
+		    menu_end((MenuCtx*)specific_context);
+		    break;
+		case GameState::snake:
+		    break;
+		case GameState::scoreboard:
+		    break;
+	    }
+	}
+
+
 	// Parse the return code
 	switch(return_code)
 	{
@@ -137,13 +160,21 @@ int main(void)
 	    }
 	    case GameReturnCode::play_snake:
 	    {
-		free(specific_context);
-		specific_context = NULL;
+		specific_context = NULL; // snake_start
 		generic_context.game_state = GameState::snake;
 		break;
 	    }
 
 	}
+
+	// Draw Top Bar
+	draw_rectangle(&pixel_map, 800, 50, (Vec2i){0, 800-50}, (Vec3i){50, 50, 50});
+	draw_sentence(&pixel_map, "snake maker", 8, 3, (Vec2i){30, 760}, (Vec3i){0, 255, 0});
+	char buf[255];
+	memset(buf, 0, 255);
+	snprintf(buf, 255, "fps %.2lf", 1.0 / generic_context.delta_time);
+	draw_sentence(&pixel_map, buf, 8, 3, (Vec2i){550, 760}, (Vec3i){255, 0, 0});
+
 
 	// Drawing the pixmap onto the screen
 	glTextureSubImage2D(tex, 0, 0, 0, pixel_map.width, pixel_map.height, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);

@@ -9,4 +9,14 @@ struct GenericCtx
     Vec2i mouse_pos;
     double delta_time;
     GameState game_state;
+    struct
+    {
+	bool w;
+	bool a;
+	bool s;
+	bool d;
+	bool space;
+	bool enter;
+	bool backspace;
+    } keyboard;
 };
