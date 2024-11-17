@@ -143,7 +143,6 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
 
 void menu_end(MenuCtx *menu_ctx)
 {
-    
     menu_free_available_maps(menu_ctx);
     pixel_map_destroy(&menu_ctx->map_selector_pixel_map);
 
@@ -155,7 +154,7 @@ void menu_fill_maps(MenuCtx *menu_ctx)
     menu_free_available_maps(menu_ctx);
 
     // Get amount of map files
-    std::string path = "../maps/";
+    std::string path = g_map_dir;
     for (const auto &entry : std::filesystem::directory_iterator(path))
     {
 	if (entry.is_regular_file())

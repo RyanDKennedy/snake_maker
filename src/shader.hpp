@@ -12,11 +12,7 @@ public:
     GLuint m_fragment_shader;
     GLuint m_program;
     
-    std::string m_vertex_path;
-    std::string m_fragment_path;
-    
-    
-    Shader(std::string vertex_path, std::string fragment_path);
+    Shader(const char *vertex_source_cstr, const char *fragment_source_cstr);
     ~Shader();
     void use();
     GLuint get_program();

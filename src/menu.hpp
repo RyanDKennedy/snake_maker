@@ -1,11 +1,13 @@
 #pragma once
 
+#include "common.hpp"
 #include "context.hpp"
 #include "button.hpp"
 #include "drawing.hpp"
 #include "pixel_map.hpp"
 #include "game_state.hpp"
 #include "collisions.hpp"
+
 
 struct MenuCtx
 {

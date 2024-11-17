@@ -24,6 +24,7 @@ add_executable(${PROJECT_NAME}
   src/collisions.cpp
   src/button.cpp
   src/menu.cpp
+  src/snake.cpp
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD 17)

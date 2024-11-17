@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 
+#include "common.hpp"
 #include "drawing.hpp"
 #include "shader.hpp"
 #include "quad.hpp"
@@ -17,6 +18,7 @@
 #include "button.hpp"
 #include "context.hpp"
 #include "menu.hpp"
+#include "snake.hpp"
 
 double scroll_y_offset = 0.0;
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -54,7 +56,7 @@ int main(void)
 
     // Pixel Map Settings
     PixelMap pixel_map = pixel_map_create(win_width, win_height);
-    Shader shader("../shaders/quad.vert", "../shaders/quad.frag");
+    Shader shader(g_shader_vertex_code, g_shader_fragment_code);
     Quad quad;
     GLuint tex;
     glCreateTextures(GL_TEXTURE_2D, 1, &tex);
@@ -172,7 +174,7 @@ int main(void)
 	    case GameReturnCode::play_snake:
 	    {
 		printf("loading map: %s\n", menu_result);
-		specific_context = NULL; // snake_start
+		specific_context = (SnakeCtx*)snake_start(&generic_context, menu_result);
 		generic_context.game_state = GameState::snake;
 		break;
 	    }
