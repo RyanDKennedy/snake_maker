@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
-set(CMAKE_EXPORT_COMPILE_COMMANDS true)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 
 project(snake_maker)
 
@@ -9,11 +10,7 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 set( GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
 set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
 set( GLAD_GL "" )
-
-
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/glfw)
-
-
 
 add_executable(${PROJECT_NAME}
   src/main.cpp
@@ -29,6 +26,10 @@ add_executable(${PROJECT_NAME}
   src/button.cpp
   src/menu.cpp
 )
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 target_include_directories(${PROJECT_NAME}
 	PUBLIC

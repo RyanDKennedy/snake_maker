@@ -22,3 +22,16 @@ Button create_button(const char *text, int width, int height, Vec2i pos, Vec3i b
 
     return result;
 }
+
+void move_button(Button *button, Vec2i pos, bool translate)
+{
+    // Set pos according to the translate value
+    if (translate)
+    {
+	pos[0] += button->col_box.bottom_left[0];
+	pos[1] += button->col_box.bottom_left[1];
+    }
+
+    memcpy(button->col_box.bottom_left, pos, sizeof(Vec2i));
+    memcpy(button->col_box.top_right, (Vec2i){pos[0] + button->width, pos[1] + button->height}, sizeof(Vec2i));
+}

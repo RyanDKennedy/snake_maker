@@ -98,6 +98,12 @@ void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i
 
 void draw_button(PixelMap *pixel_map, Button *button, bool hover)
 {
+    if (button->col_box.bottom_left[0] < 0 || button->col_box.bottom_left[1] < 0 ||
+        button->col_box.top_right[1] > pixel_map->height || button->col_box.top_right[0] > pixel_map->width)
+    {
+	return;
+    }
+
     Vec2i text_pos;
     text_pos[0] = button->col_box.bottom_left[0] + button->font_size * button->font_mag;
     text_pos[1] = button->col_box.bottom_left[1] + (button->height  - (button->font_size * button->font_mag)) / 2;

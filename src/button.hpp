@@ -19,3 +19,7 @@ struct Button
 };
 
 Button create_button(const char *text, int width, int height, Vec2i pos, Vec3i bg_color, Vec3i fg_color, int font_size, int font_mag);
+
+// if translate is true then it will translate the button by pos
+// if translate is false then it will set the buttons position to pos
+void move_button(Button *button, Vec2i pos, bool translate_instead_of_set_position);
