@@ -12,4 +12,5 @@ enum class GameReturnCode
 {
     none,
     play_snake,
+    goto_menu,
 };

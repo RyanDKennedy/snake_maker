@@ -158,7 +158,11 @@ int main(void)
 		    break;
 		}
 		case GameState::snake:
+		{
+		    SnakeCtx *snake_ctx = (SnakeCtx*)specific_context;
+		    snake_end(snake_ctx);
 		    break;
+		}
 		case GameState::scoreboard:
 		    break;
 	    }
@@ -178,7 +182,12 @@ int main(void)
 		generic_context.game_state = GameState::snake;
 		break;
 	    }
-
+	    case GameReturnCode::goto_menu:
+	    {
+		specific_context = (MenuCtx*)menu_start(&generic_context);
+		generic_context.game_state = GameState::menu;		
+		break;
+	    }
 	}
 
 	// Draw Top Bar

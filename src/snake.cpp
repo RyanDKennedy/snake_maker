@@ -1,5 +1,6 @@
 #include "snake.hpp"
 #include "common.hpp"
+#include "game_state.hpp"
 #include "map.hpp"
 
 #include <cstdlib>
@@ -20,12 +21,20 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
 
 GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx *snake_ctx)
 {
+    GameReturnCode return_code = GameReturnCode::none;
+
     // Draw outline
     draw_rectangle(pixel_map, 650, 650, Vec2i{75, 75}, Vec3i{50, 50, 50});
     
+    // Draw map
     draw_pixmap(pixel_map, &snake_ctx->map->board_pixel_map, Vec2i{100, 100});
 
-    return GameReturnCode::none;
+    if (generic_ctx->keyboard.backspace)
+    {
+	return_code = GameReturnCode::goto_menu;
+    }
+
+    return return_code;
 }
 
 void snake_end(SnakeCtx *snake_ctx)
