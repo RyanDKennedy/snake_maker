@@ -20,6 +20,6 @@ struct GenericCtx
 	bool enter;
 	bool backspace;
     } keyboard;
-
+    char last_pressed_key;
 
 };

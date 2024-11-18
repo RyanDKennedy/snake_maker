@@ -20,8 +20,12 @@
 #include "menu.hpp"
 #include "snake.hpp"
 
+
 double scroll_y_offset = 0.0;
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+
+char key_list[256] = {0}; // This will hold a list of keys that were pressed in chronological order
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
 int main(void)
 {
@@ -40,9 +44,9 @@ int main(void)
         return 1;
     }
     glfwMakeContextCurrent(window);
-//    glfwSwapInterval(true); // turns on vsync
+    glfwSwapInterval(true); // turns on vsync
     glfwSetScrollCallback(window, scroll_callback);
-
+    glfwSetKeyCallback(window, key_callback);
 
     // Load the opengl functions
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -90,8 +94,8 @@ int main(void)
     void* specific_context = (void*)menu_start(&generic_context);
 
     // Loop variables
-	auto time_start = std::chrono::high_resolution_clock::now();
-	auto time_end = std::chrono::high_resolution_clock::now();
+    auto time_start = std::chrono::high_resolution_clock::now();
+    auto time_end = std::chrono::high_resolution_clock::now();
    
 
     // Render Loop
@@ -120,6 +124,11 @@ int main(void)
 	generic_context.keyboard.enter = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
 	generic_context.keyboard.backspace = (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
 	generic_context.mouse_scroll = scroll_y_offset;
+	if (strlen(key_list) != 0)
+	    generic_context.last_pressed_key = key_list[strlen(key_list) - 1];	    
+	else
+	    generic_context.last_pressed_key = '\0';
+
 	
 	// Clear
 	memset(pixel_map.data, 0, pixel_map.size * sizeof(RGBPixel));
@@ -191,7 +200,7 @@ int main(void)
 	}
 
 	// Draw Top Bar
-	draw_rectangle(&pixel_map, 800, 50, Vec2i{0, 800-50}, Vec3i{50, 50, 50});
+	draw_rectangle(&pixel_map, 800, 50, Vec2i{0, 750}, Vec3i{50, 50, 50});
 	draw_sentence(&pixel_map, "snake maker", 8, 3, Vec2i{30, 760}, Vec3i{0, 255, 0});
 	char buf[255];
 	memset(buf, 0, 255);
@@ -208,6 +217,7 @@ int main(void)
 
 	// Reset variables that are set by input callbacks
 	scroll_y_offset = 0.0;
+	memset(key_list, 0, 256);
 
         glfwPollEvents();
         glfwSwapBuffers(window);
@@ -221,4 +231,34 @@ int main(void)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     scroll_y_offset = yoffset;
+}
+
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    if (action != GLFW_PRESS)
+    {
+	return;
+    }
+
+    char c[2] = {0};
+    switch (key)
+    {
+	case GLFW_KEY_W:
+	    c[0] = 'w';
+	    break;
+	case GLFW_KEY_A:
+	    c[0] = 'a';
+	    break;
+	case GLFW_KEY_S:
+	    c[0] = 's';
+	    break;
+	case GLFW_KEY_D:
+	    c[0] = 'd';
+	    break;
+
+	default:
+	    return;
+    }
+
+    strcat(key_list, c);
 }

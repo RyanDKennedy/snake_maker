@@ -10,10 +10,5 @@ struct Quad
 
     Quad();
     ~Quad();
-    void update_model();
     void draw();
-    
-    void translate(float x_trans, float y_trans);
-    void rotate(float rotation);
-    void scale(float x_scale, float y_scale);
 };

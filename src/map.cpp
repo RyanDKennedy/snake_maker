@@ -193,7 +193,7 @@ void load_tile_from_file(const char *path, PixelMap *target_map)
 	}
 
 	// Iterate across colors
-	num = 0;
+
 	for (int x = 0; x < parens_amt; ++x)
 	{
 	    // fill color channels
@@ -203,6 +203,7 @@ void load_tile_from_file(const char *path, PixelMap *target_map)
 
 	    const char *commas[2];
 	    const int len = strlen(parens[x]);
+	    num = 0;
 	    for (int i = 0; i < len && num < 2; ++i)
 	    {
 		if (*(parens[x] + i) == ',')
