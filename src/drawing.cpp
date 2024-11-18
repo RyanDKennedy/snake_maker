@@ -58,10 +58,12 @@ void draw_letter(PixelMap *pixel_map, char letter, int font_size, int font_mag, 
 	{
 	    if (font_bitmap[h * font_size + w] == '1')
 	    {
+#ifndef NDEBUG
 		const int x = pos[0] + w;
 		const int y = (font_size - h) + pos[1];
 		if (x < 0 || x >= pixel_map->width || y < 0 || y >= pixel_map->height)
 		    continue;
+#endif
 		
 		int base = pos[0] + pos[1] * pixel_map->width;
 		const int index = (font_size - h) * pixel_map->width + w + base;
@@ -95,8 +97,10 @@ void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i
     {
 	for (int x = pos[0]; x < pos[0] + width; ++x)
 	{
+#ifndef NDEBUG
 	    if (x < 0 || x >= pixel_map->width || y < 0 || y >= pixel_map->height)
 		continue;
+#endif
 
 	    pixel_map->data[y * pixel_map->width + x].r = color[0];
 	    pixel_map->data[y * pixel_map->width + x].g = color[1];
@@ -140,9 +144,13 @@ void draw_pixmap(PixelMap *dest, PixelMap *src, Vec2i pos)
     {
 	for (int x = 0; x < src->width; ++x)
 	{
+
 	    Vec2i dest_pos = {pos[0] + x, pos[1] + y};
+
+#ifndef NDEBUG
 	    if (dest_pos[0] < 0 || dest_pos[0] >= dest->width || dest_pos[1] < 0 || dest_pos[1] >= dest->height)
 		continue;
+#endif
 	    
 	    memcpy(&dest->data[dest_pos[0] + dest_pos[1] * dest->width], &src->data[x + y * src->width], sizeof(RGBPixel));
 	}
@@ -151,3 +159,5 @@ void draw_pixmap(PixelMap *dest, PixelMap *src, Vec2i pos)
 
 
 }
+
+

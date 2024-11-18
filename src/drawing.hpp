@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.hpp"
 #include "pixel_map.hpp"
 #include "custom_fonts.hpp"
 #include "math_types.hpp"
@@ -14,4 +15,5 @@ void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i
 void draw_button(PixelMap *pixel_map, Button *button, bool hover);
 
 void draw_pixmap(PixelMap *dest, PixelMap *src, Vec2i pos);
+
 
