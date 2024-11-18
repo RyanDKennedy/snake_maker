@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-#ifndef NDEBUG
+#if !defined NDEBUG && !defined WIN32
 #define SNAKE_MSG(text, ...) fprintf(stderr, text __VA_OPT__(,) __VA_ARGS__);
 #else
 #define SNAKE_MSG(text, ...)
