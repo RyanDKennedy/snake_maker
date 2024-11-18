@@ -13,7 +13,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/external/glfw)
 
 add_executable(${PROJECT_NAME}
   src/main.cpp
-  src/glad.c
+  external/glad.c
   src/quad.cpp
   src/shader.cpp
   src/utils.cpp
@@ -34,7 +34,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 
 target_include_directories(${PROJECT_NAME}
 	PUBLIC
-       ${CMAKE_SOURCE_DIR}/include/
+       ${CMAKE_SOURCE_DIR}/external/include/
        ${CMAKE_SOURCE_DIR}/src/
 )
 
