@@ -68,7 +68,7 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
 	bool hover = is_inside_collision_box(&menu_ctx->settings_btn.col_box, generic_ctx->mouse_pos);
 	if (hover && generic_ctx->mouse_clicked)
 	{
-	    return_code = GameReturnCode::none;
+	    return_code = GameReturnCode::goto_settings;
 	}
 	draw_button(pixel_map, &menu_ctx->settings_btn, hover);
     }

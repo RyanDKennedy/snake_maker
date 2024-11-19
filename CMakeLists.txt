@@ -31,6 +31,7 @@ add_executable(${PROJECT_NAME}
   src/menu.cpp
   src/snake.cpp
   src/map.cpp
+  src/settings.cpp
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD 17)

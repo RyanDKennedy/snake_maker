@@ -19,7 +19,7 @@
 #include "context.hpp"
 #include "menu.hpp"
 #include "snake.hpp"
-
+#include "settings.hpp"
 
 double scroll_y_offset = 0.0;
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
@@ -142,6 +142,15 @@ int main(void)
 	    {
 		break;
 	    }
+	    case GameState::settings:
+	    {
+		return_code = settings_run(&pixel_map, &generic_context, (SettingsCtx*)specific_context);
+		break;
+	    }
+	    case GameState::map_create:
+	    {
+		break;
+	    }
 	}
 
 	char menu_result[255] = {0};
@@ -164,7 +173,19 @@ int main(void)
 		    break;
 		}
 		case GameState::scoreboard:
+		{
 		    break;
+		}
+		case GameState::settings:
+		{
+		    SettingsCtx *settings_ctx = (SettingsCtx*)specific_context;
+		    settings_end(settings_ctx);
+		    break;
+		}
+		case GameState::map_create:
+		{
+		    break;
+		}
 	    }
 	}
 
@@ -186,6 +207,12 @@ int main(void)
 	    {
 		specific_context = (MenuCtx*)menu_start(&generic_context);
 		generic_context.game_state = GameState::menu;		
+		break;
+	    }
+	    case GameReturnCode::goto_settings:
+	    {
+		specific_context = (SettingsCtx*)settings_start(&generic_context);
+		generic_context.game_state = GameState::settings;				
 		break;
 	    }
 	}
