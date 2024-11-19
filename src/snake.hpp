@@ -27,10 +27,15 @@ struct SnakeCtx
 {
     char map_path[256];
     SnakeMap *map;
+
     std::deque<SnakeSegment> snake;
     SnakeDir snake_dir;
+    SnakeDir snake_dir_old;
     double time_since_last_move;
     int add_segments;
+    
+    int apples_amt;
+    Vec2i *apples;
 };
 
 SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name);
