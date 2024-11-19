@@ -34,8 +34,10 @@ int main(void)
 
     // GLFW Configuration
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     GLFWwindow* window = glfwCreateWindow(win_width, win_height, "Snake Maker", NULL, NULL);
     if(!window)
@@ -62,15 +64,16 @@ int main(void)
     PixelMap pixel_map = pixel_map_create(win_width, win_height);
     Shader shader(g_shader_vertex_code, g_shader_fragment_code);
     Quad quad;
-    GLuint tex;
-    glCreateTextures(GL_TEXTURE_2D, 1, &tex);
     float border_color[] = {0.0, 0.0, 0.0, 0.0};
-    glTextureParameterfv(tex, GL_TEXTURE_BORDER_COLOR, border_color);
-    glTextureParameteri(tex, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTextureParameteri(tex, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureStorage2D(tex, 1, GL_RGBA8, pixel_map.width, pixel_map.height);
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, win_width, win_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
 
     // Fonts
     init_fonts();
@@ -78,17 +81,6 @@ int main(void)
     // Initialize generic_context
     GenericCtx generic_context;
     generic_context.game_state = GameState::menu;
-    generic_context.mouse_pos[0] = 0;
-    generic_context.mouse_pos[1] = 0;
-    generic_context.mouse_clicked = false;
-    generic_context.mouse_scroll = scroll_y_offset;
-    generic_context.keyboard.w = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);
-    generic_context.keyboard.a = (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
-    generic_context.keyboard.s = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
-    generic_context.keyboard.d = (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS);
-    generic_context.keyboard.space = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
-    generic_context.keyboard.enter = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
-    generic_context.keyboard.backspace = (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
 
     // Initialize specific_context
     void* specific_context = (void*)menu_start(&generic_context);
@@ -97,7 +89,6 @@ int main(void)
     auto time_start = std::chrono::high_resolution_clock::now();
     auto time_end = std::chrono::high_resolution_clock::now();
    
-
     // Render Loop
     while(!glfwWindowShouldClose(window))
     {
@@ -207,11 +198,11 @@ int main(void)
 	snprintf(buf, 255, "fps %.2lf", 1.0 / generic_context.delta_time);
 	draw_sentence(&pixel_map, buf, 8, 3, Vec2i{550, 760}, Vec3i{255, 0, 0});
 
-
 	// Drawing the pixmap onto the screen
-	glTextureSubImage2D(tex, 0, 0, 0, pixel_map.width, pixel_map.height, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, win_width, win_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
 	shader.use();
-	glBindTextureUnit(0, tex);
 	glUniform1i(glGetUniformLocation(shader.m_program, "u_tex"), 0);
 	quad.draw();
 

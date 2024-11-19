@@ -1,5 +1,6 @@
 #include "quad.hpp"
 
+#include <cstdio>
 
 Quad::Quad()
 {
@@ -18,23 +19,24 @@ Quad::Quad()
         0, 2, 3  // BOTTOM TRIANGLE
     };
 
-    glCreateVertexArrays(1, &m_VAO);
-    glCreateBuffers(1, &m_VBO);
-    glCreateBuffers(1, &m_EBO);
+    glGenVertexArrays(1, &m_VAO);
+    glGenBuffers(1, &m_VBO);
+    glGenBuffers(1, &m_EBO);
 
-    glNamedBufferData(m_VBO, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glNamedBufferData(m_EBO, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindVertexArray(m_VAO);
 
-    glEnableVertexArrayAttrib(m_VAO, 0);
-    glVertexArrayAttribBinding(m_VAO, 0, 0);
-    glVertexArrayAttribFormat(m_VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glEnableVertexArrayAttrib(m_VAO, 1);
-    glVertexArrayAttribBinding(m_VAO, 1, 0);
-    glVertexArrayAttribFormat(m_VAO, 1, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexArrayVertexBuffer(m_VAO, 0, m_VBO, 0, 5 * sizeof(vertices[0]));
-    glVertexArrayElementBuffer(m_VAO, m_EBO);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
 }
 
 Quad::~Quad()

@@ -28,7 +28,7 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
 
     snake_ctx->time_since_last_move = 0.0f;
 
-    snake_ctx->add_segments = 9;
+    snake_ctx->add_segments = 1;
 
     snake_ctx->apples_amt = 2;
     snake_ctx->apples = (Vec2i*)calloc(snake_ctx->apples_amt, sizeof(Vec2i));
@@ -161,7 +161,6 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 		} while (snake_ctx->map->collision_map[snake_ctx->apples[i][0] + snake_ctx->apples[i][1] * snake_ctx->map->width] != 0);
 	    }
 	}
-
 
 	// Add segments to snake
 	if (snake_ctx->add_segments == 0)
