@@ -27,18 +27,23 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 char key_list[256] = {0}; // This will hold a list of keys that were pressed in chronological order
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
+void window_resize_callback(GLFWwindow *window, int width, int height);
+
+const int pix_width = 800;
+const int pix_height = 800;
+
+int win_width = 800;
+int win_height = 800;
+
 int main(void)
 {
-    const int win_width = 800;
-    const int win_height = 800;
-
     // GLFW Configuration
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+//    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     GLFWwindow* window = glfwCreateWindow(win_width, win_height, "Snake Maker", NULL, NULL);
     if(!window)
     {
@@ -49,6 +54,8 @@ int main(void)
     glfwSwapInterval(true); // turns on vsync
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetWindowAspectRatio(window, 1, 1);
+    glfwSetWindowSizeCallback(window, window_resize_callback);
 
     // Load the opengl functions
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -61,7 +68,7 @@ int main(void)
     glViewport(0, 0, win_width, win_height);
 
     // Pixel Map Settings
-    PixelMap pixel_map = pixel_map_create(win_width, win_height);
+    PixelMap pixel_map = pixel_map_create(pix_width, pix_height);
     Shader shader(g_shader_vertex_code, g_shader_fragment_code);
     Quad quad;
     float border_color[] = {0.0, 0.0, 0.0, 0.0};
@@ -73,7 +80,7 @@ int main(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, win_width, win_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pix_width, pix_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
 
     // Fonts
     init_fonts();
@@ -98,11 +105,15 @@ int main(void)
 	generic_context.delta_time = std::chrono::duration<double>(time_end-time_start).count();
 	time_start = time_end;
 	
+	
 	// Fill generic context
 	{
 	    double xpos, ypos;
 	    glfwGetCursorPos(window, &xpos, &ypos);
-	    ypos = win_height - ypos;
+
+	    xpos = (double)xpos / win_width * pix_width;
+	    ypos = (1.0 - (double)ypos / win_height) * pix_height;
+
 	    generic_context.mouse_pos[0] = (int)xpos;
 	    generic_context.mouse_pos[1] = (int)ypos;
 	}	
@@ -228,7 +239,7 @@ int main(void)
 	// Drawing the pixmap onto the screen
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, win_width, win_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pix_width, pix_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
 	shader.use();
 	glUniform1i(glGetUniformLocation(shader.m_program, "u_tex"), 0);
 	quad.draw();
@@ -279,4 +290,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
 
     strcat(key_list, c);
+}
+
+void window_resize_callback(GLFWwindow *window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+    win_width = width;
+    win_height = height;
 }
