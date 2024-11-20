@@ -7,6 +7,7 @@
 struct Settings
 {
     int starting_speed;
+    int starting_size;
 };
 
 struct SettingsCtx
@@ -16,6 +17,7 @@ struct SettingsCtx
 };
 
 Settings settings_from_file(const char *path);
+void settings_write_to_file(const char *path, Settings *settings);
 
 SettingsCtx* settings_start(GenericCtx *generic_ctx);
 
