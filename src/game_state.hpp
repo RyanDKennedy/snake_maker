@@ -8,6 +8,7 @@ enum class GameState
     scoreboard,
     settings,
     map_create,
+    tile_create,
 };
 
 enum class GameReturnCode
@@ -16,4 +17,5 @@ enum class GameReturnCode
     play_snake,
     goto_menu,
     goto_settings,
+    goto_tile_create,
 };

@@ -32,6 +32,8 @@ add_executable(${PROJECT_NAME}
   src/snake.cpp
   src/map.cpp
   src/settings.cpp
+  src/increment_value.cpp
+  src/tile_create.cpp
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD 17)

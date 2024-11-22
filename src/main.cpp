@@ -20,6 +20,7 @@
 #include "menu.hpp"
 #include "snake.hpp"
 #include "settings.hpp"
+#include "tile_create.hpp"
 
 double scroll_y_offset = 0.0;
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
@@ -43,7 +44,6 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-//    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     GLFWwindow* window = glfwCreateWindow(win_width, win_height, "Snake Maker", NULL, NULL);
     if(!window)
     {
@@ -175,6 +175,11 @@ int main(void)
 	    {
 		break;
 	    }
+	    case GameState::tile_create:
+	    {
+		return_code = tile_create_run(&pixel_map, &generic_context, (TileCreateCtx*)specific_context);
+		break;
+	    }
 	}
 
 	char menu_result[255] = {0};
@@ -210,6 +215,12 @@ int main(void)
 		{
 		    break;
 		}
+		case GameState::tile_create:
+		{
+		    TileCreateCtx *tile_create_ctx = (TileCreateCtx*)specific_context;
+		    tile_create_end(&generic_context, tile_create_ctx);		    
+		    break;
+		}
 	    }
 	}
 
@@ -223,20 +234,26 @@ int main(void)
 	    }
 	    case GameReturnCode::play_snake:
 	    {
-		specific_context = (SnakeCtx*)snake_start(&generic_context, menu_result);
+		specific_context = (void*)snake_start(&generic_context, menu_result);
 		generic_context.game_state = GameState::snake;
 		break;
 	    }
 	    case GameReturnCode::goto_menu:
 	    {
-		specific_context = (MenuCtx*)menu_start(&generic_context);
+		specific_context = (void*)menu_start(&generic_context);
 		generic_context.game_state = GameState::menu;		
 		break;
 	    }
 	    case GameReturnCode::goto_settings:
 	    {
-		specific_context = (SettingsCtx*)settings_start(&generic_context);
+		specific_context = (void*)settings_start(&generic_context);
 		generic_context.game_state = GameState::settings;				
+		break;
+	    }
+	    case GameReturnCode::goto_tile_create:
+	    {
+		specific_context = (void*)tile_create_start(&generic_context);
+		generic_context.game_state = GameState::tile_create;
 		break;
 	    }
 	}

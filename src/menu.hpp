@@ -14,6 +14,7 @@ struct MenuCtx
     Button play_snake_btn;
     Button create_map_btn;
     Button settings_btn;
+    Button create_tile_btn;
 
     Button *available_maps;
     int available_maps_amt;

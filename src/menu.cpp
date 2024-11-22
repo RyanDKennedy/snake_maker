@@ -15,11 +15,11 @@
 MenuCtx* menu_start(GenericCtx *generic_context)
 {
     MenuCtx *context = (MenuCtx*)calloc(1, sizeof(MenuCtx));
-    context->map_selector_pixel_map = pixel_map_create(400, 350);
+    context->map_selector_pixel_map = pixel_map_create(400, 300);
     context->available_maps = NULL;
     context->available_maps_amt = 0;
     menu_fill_maps(context);
-    context->map_selector_scroll_amt = 400 - (context->available_maps_amt + 1) * 60;
+    context->map_selector_scroll_amt = context->map_selector_pixel_map.height + 50 - (context->available_maps_amt + 1) * 60;
     context->min_scroll = context->map_selector_scroll_amt;
 
     // Play snake btn
@@ -30,8 +30,12 @@ MenuCtx* menu_start(GenericCtx *generic_context)
     context->create_map_btn = create_button("create map", 300, 50, Vec2i{250, 530}, Vec3i{50, 50, 50}, Vec3i{255, 255, 255}, 8, 2);
     memcpy(context->create_map_btn.bg_hover_color, Vec3i{50, 50, 100}, sizeof(Vec3i));
 
+    // Create tile btn
+    context->create_tile_btn = create_button("create tile", 300, 50, Vec2i{250, 460}, Vec3i{50, 50, 50}, Vec3i{255, 255, 255}, 8, 2);
+    memcpy(context->create_tile_btn.bg_hover_color, Vec3i{50, 50, 100}, sizeof(Vec3i));
+
     // Settings btn
-    context->settings_btn = create_button("settings", 300, 50, Vec2i{250, 460}, Vec3i{50, 50, 50}, Vec3i{255, 255, 255}, 8, 2);
+    context->settings_btn = create_button("settings", 300, 50, Vec2i{250, 390}, Vec3i{50, 50, 50}, Vec3i{255, 255, 255}, 8, 2);
     memcpy(context->settings_btn.bg_hover_color, Vec3i{50, 50, 100}, sizeof(Vec3i));
 
     return context;
@@ -61,6 +65,16 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
 	    return_code = GameReturnCode::none;
 	}
 	draw_button(pixel_map, &menu_ctx->create_map_btn, hover);
+    }
+
+    // Create tile btn
+    {
+	bool hover = is_inside_collision_box(&menu_ctx->create_tile_btn.col_box, generic_ctx->mouse_pos);
+	if (hover && generic_ctx->mouse_clicked)
+	{
+	    return_code = GameReturnCode::goto_tile_create;
+	}
+	draw_button(pixel_map, &menu_ctx->create_tile_btn, hover);
     }
 
     // Settings btn
@@ -106,13 +120,19 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
     // Draw the map selector
     {
 	// title
-	draw_sentence(pixel_map, "map selector", 8, 2, Vec2i{290, 380}, Vec3i{255, 255, 255});
+	draw_sentence(pixel_map, "map selector", 8, 2, Vec2i{290, 330}, Vec3i{255, 255, 255});
 
 	// Surrounding rectangle
-	draw_rectangle(&menu_ctx->map_selector_pixel_map, 400, 350, Vec2i{0, 0}, Vec3i{20, 20, 20});
+	draw_rectangle(&menu_ctx->map_selector_pixel_map, menu_ctx->map_selector_pixel_map.width, menu_ctx->map_selector_pixel_map.height, Vec2i{0, 0}, Vec3i{20, 20, 20});
 
 	const int pixmap_x = 200;
 	const int pixmap_y = 20;
+
+	CollisionBox area;
+	area.bottom_left[0] = 0;
+	area.bottom_left[1] = 0;
+	area.top_right[0] = menu_ctx->map_selector_pixel_map.width - 1;
+	area.top_right[1] = menu_ctx->map_selector_pixel_map.height - 1;
 
 	// Draw the map options
 	for (int i = 0; i < menu_ctx->available_maps_amt; ++i)
@@ -131,7 +151,7 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
 		menu_ctx->selected_map = i;
 	    }
 
-	    draw_button(&menu_ctx->map_selector_pixel_map, current_btn, (i == menu_ctx->selected_map));
+		draw_button_partial(&menu_ctx->map_selector_pixel_map, current_btn, (i == menu_ctx->selected_map), area);
 	}
 
 	draw_pixmap(pixel_map, &menu_ctx->map_selector_pixel_map, Vec2i{pixmap_x, pixmap_y});
