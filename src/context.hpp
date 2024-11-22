@@ -3,9 +3,16 @@
 #include "game_state.hpp"
 #include "math_types.hpp"
 
+struct Settings
+{
+    int starting_speed;
+    int starting_size;
+};
+
 struct GenericCtx
 {
     bool mouse_clicked;
+    bool mouse_released;
     Vec2i mouse_pos;
     double mouse_scroll;
     double delta_time;
@@ -22,4 +29,5 @@ struct GenericCtx
     } keyboard;
     char last_pressed_key;
 
+    Settings settings;
 };

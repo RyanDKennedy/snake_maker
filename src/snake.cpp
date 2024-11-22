@@ -28,7 +28,7 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
 
     snake_ctx->time_since_last_move = 0.0f;
 
-    snake_ctx->add_segments = 1;
+    snake_ctx->add_segments = generic_ctx->settings.starting_size;
 
     snake_ctx->apples_amt = 2;
     snake_ctx->apples = (Vec2i*)calloc(snake_ctx->apples_amt, sizeof(Vec2i));
@@ -37,6 +37,8 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
 	snake_ctx->apples[i][0] = -1;
 	snake_ctx->apples[i][1] = -1;
     }
+
+    snake_ctx->speed = 1.0 / generic_ctx->settings.starting_speed;
 
     return snake_ctx;
 }
@@ -76,9 +78,9 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 
     // Update snake
     snake_ctx->time_since_last_move += generic_ctx->delta_time;
-    while (snake_ctx->time_since_last_move > 0.2)
+    while (snake_ctx->time_since_last_move > snake_ctx->speed)
     {
-	snake_ctx->time_since_last_move -= 0.2;
+	snake_ctx->time_since_last_move -= snake_ctx->speed;
 
 	snake_ctx->snake_dir_old = snake_ctx->snake_dir;
 

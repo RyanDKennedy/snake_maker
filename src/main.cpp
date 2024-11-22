@@ -88,6 +88,7 @@ int main(void)
     // Initialize generic_context
     GenericCtx generic_context;
     generic_context.game_state = GameState::menu;
+    generic_context.settings = settings_from_file(g_settings_file);
 
     // Initialize specific_context
     void* specific_context = (void*)menu_start(&generic_context);
@@ -117,7 +118,19 @@ int main(void)
 	    generic_context.mouse_pos[0] = (int)xpos;
 	    generic_context.mouse_pos[1] = (int)ypos;
 	}	
-	generic_context.mouse_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+	{
+	    bool old_clicked = generic_context.mouse_clicked;
+	    generic_context.mouse_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+	    if (old_clicked == true && generic_context.mouse_clicked == false)
+	    {
+		generic_context.mouse_released = true;
+	    }
+	    else
+	    {
+		generic_context.mouse_released = false;
+	    }
+	}
+
 	generic_context.keyboard.w = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);
 	generic_context.keyboard.a = (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
 	generic_context.keyboard.s = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
@@ -190,7 +203,7 @@ int main(void)
 		case GameState::settings:
 		{
 		    SettingsCtx *settings_ctx = (SettingsCtx*)specific_context;
-		    settings_end(settings_ctx);
+		    settings_end(&generic_context, settings_ctx);
 		    break;
 		}
 		case GameState::map_create:

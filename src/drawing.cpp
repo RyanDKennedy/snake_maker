@@ -87,7 +87,7 @@ void draw_sentence(PixelMap *pixel_map, const char *sentence, int font_size, int
     for (int i = 0; i < strlen(sentence); ++i)
     {
 	draw_letter(pixel_map, sentence[i], font_size, font_mag, Vec2i{xval, pos[1]}, color);
-	xval += (font_size * font_mag) + 1;
+	xval += (font_size * font_mag);
     }
 }
 
@@ -112,10 +112,6 @@ void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i
 
 void draw_button(PixelMap *pixel_map, Button *button, bool hover)
 {
-    Vec2i text_pos;
-    text_pos[0] = button->col_box.bottom_left[0] + button->font_size * button->font_mag;
-    text_pos[1] = button->col_box.bottom_left[1] + (button->height  - (button->font_size * button->font_mag)) / 2;
-
     Vec3i bg;
     Vec3i fg;
     if (hover)
@@ -132,7 +128,11 @@ void draw_button(PixelMap *pixel_map, Button *button, bool hover)
     // truncate text
     char text[255];
     const int char_size = button->font_size * button->font_mag;
-    snprintf(text, (button->width - 2*char_size) /  char_size + 1, "%s", button->text);
+    snprintf(text, button->width / char_size + 1, "%s", button->text);
+
+    Vec2i text_pos;
+    text_pos[0] = button->col_box.bottom_left[0] + (button->width / 2) - (strlen(text) * char_size / 2);
+    text_pos[1] = button->col_box.bottom_left[1] + (button->height / 2) - (char_size / 2);
 
     draw_rectangle(pixel_map, button->width, button->height, button->col_box.bottom_left, bg);
     draw_sentence(pixel_map, text, button->font_size, button->font_mag, text_pos, fg);

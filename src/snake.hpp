@@ -28,6 +28,8 @@ struct SnakeCtx
     char map_path[256];
     SnakeMap *map;
 
+    double speed;
+
     std::deque<SnakeSegment> snake;
     SnakeDir snake_dir;
     SnakeDir snake_dir_old;

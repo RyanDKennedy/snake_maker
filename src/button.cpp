@@ -8,7 +8,8 @@ Button create_button(const char *text, int width, int height, Vec2i pos, Vec3i b
     result.text = text;
     result.width = width;
     result.height = height;
-    memcpy(result.col_box.bottom_left, pos, sizeof(Vec2i));
+    result.col_box.bottom_left[0] = pos[0];
+    result.col_box.bottom_left[1] = pos[1];
     result.col_box.top_right[0] = result.col_box.bottom_left[0] + width;
     result.col_box.top_right[1] = result.col_box.bottom_left[1] + height;
 

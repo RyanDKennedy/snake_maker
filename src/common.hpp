@@ -15,7 +15,7 @@ inline const char *g_tile_file_extension = ".tile";
 inline const char *g_settings_file = "../share/settings";
 
 inline const char *g_shader_vertex_code =
-"#version 450\n\
+"#version 330\n\
 \n\
 layout (location = 0) in vec3 a_pos;\n\
 layout (location = 1) in vec2 a_tex_coord;\n\
@@ -29,7 +29,7 @@ void main()\n\
 }";
 
 inline const char *g_shader_fragment_code =
-"#version 450\n\
+"#version 330\n\
 \n\
 out vec4 fragment_color;\n\
 \n\

@@ -238,7 +238,7 @@ void init_eightbitfont()
 	"11    11"
 	"11    11"
 	" 11  11 "
-	" 11  11 "
+	"  1111  "
 	"   11   ";
 
     g_eightbitfont['w'] =
@@ -392,6 +392,16 @@ void init_eightbitfont()
 	"        "
 	"        "
 	"11111111";
+
+    g_eightbitfont['^'] =
+	"   11   "
+	"  1111  "
+	" 11  11 "
+	"11    11"
+	"11    11"
+	"        "
+	"        "
+	"        ";
 
 }
 
