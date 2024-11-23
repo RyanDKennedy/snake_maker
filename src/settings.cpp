@@ -36,7 +36,7 @@ GameReturnCode settings_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Settin
 {
     GameReturnCode return_code = GameReturnCode::none;
 
-    if (generic_ctx->keyboard.backspace)
+    if (generic_ctx->keyboard.escape)
     {
 	return_code = GameReturnCode::goto_menu;
     }

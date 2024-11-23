@@ -191,7 +191,7 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
     }
 
 
-    if (generic_ctx->keyboard.backspace)
+    if (generic_ctx->keyboard.escape)
     {
 	return_code = GameReturnCode::goto_menu;
     }

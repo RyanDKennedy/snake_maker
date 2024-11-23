@@ -26,6 +26,7 @@ double scroll_y_offset = 0.0;
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 char key_list[256] = {0}; // This will hold a list of keys that were pressed in chronological order
+char key_last_pressed = '\0';
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
 void window_resize_callback(GLFWwindow *window, int width, int height);
@@ -122,6 +123,7 @@ int main(void)
 	{
 	    bool old_clicked = generic_context.mouse_clicked;
 	    generic_context.mouse_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+	    generic_context.mouse_right_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
 	    if (old_clicked == true && generic_context.mouse_clicked == false)
 	    {
 		generic_context.mouse_released = true;
@@ -138,12 +140,10 @@ int main(void)
 	generic_context.keyboard.d = (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS);
 	generic_context.keyboard.space = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
 	generic_context.keyboard.enter = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
-	generic_context.keyboard.backspace = (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
+	generic_context.keyboard.escape = (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS);
 	generic_context.mouse_scroll = scroll_y_offset;
-	if (strlen(key_list) != 0)
-	    generic_context.last_pressed_key = key_list[strlen(key_list) - 1];	    
-	else
-	    generic_context.last_pressed_key = '\0';
+	generic_context.last_pressed_key = key_last_pressed;	    
+
 	
 	// Clear
 	memset(pixel_map.data, 0, pixel_map.size * sizeof(RGBPixel));
@@ -277,6 +277,7 @@ int main(void)
 	// Reset variables that are set by input callbacks
 	scroll_y_offset = 0.0;
 	memset(key_list, 0, 256);
+	key_last_pressed = '\0';
 
         glfwPollEvents();
         glfwSwapBuffers(window);
@@ -294,20 +295,56 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    if (action != GLFW_PRESS)
+    if (action == GLFW_PRESS)
     {
-	return;
+	key_last_pressed = key;
     }
 
-    char c[2] = {0};
-    c[0] = key;
-
-    if (key == GLFW_KEY_BACKSPACE)
+    if (action != GLFW_RELEASE)
     {
-	c[0] = '\b';
+	
+	char c[2] = {0};
+	
+	switch (key)
+	{
+	    case GLFW_KEY_SPACE:
+		c[0] = ' ';
+		break;
+	    case GLFW_KEY_BACKSPACE:
+		c[0] = '\b';
+		break;
+	    case GLFW_KEY_MINUS:
+		if (mods && GLFW_MOD_SHIFT)
+		    c[0] = '_';
+		else
+		    c[0] = '-';
+		break;
+	    case GLFW_KEY_PERIOD:
+		c[0] = '.';
+		break;
+	}
+	
+	
+	if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z)
+	{
+	    if (mods && GLFW_MOD_SHIFT)
+	    {
+		c[0] = key;
+	    }
+	    else
+	    {
+		c[0] = key + 32;
+	    }
+	}
+	
+	if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9)
+	{
+	    if (!(mods && GLFW_MOD_SHIFT))
+		c[0] = key;
+	}
+	
+	strcat(key_list, c);
     }
-
-    strcat(key_list, c);
 }
 
 void window_resize_callback(GLFWwindow *window, int width, int height)

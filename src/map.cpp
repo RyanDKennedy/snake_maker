@@ -112,7 +112,10 @@ SnakeMap* snake_map_create(const char *path)
 	strcat(tile_path, g_tile_file_extension);
 
 	map->tile_maps[tile_number] = pixel_map_create(10, 10);
-	load_tile_from_file(tile_path, &map->tile_maps[tile_number]);
+	int status = load_tile_from_file(tile_path, &map->tile_maps[tile_number]);
+	if (status != 0)
+	    exit(1);
+
     }
 
     // Get the board map
@@ -141,14 +144,14 @@ void snake_map_destroy(SnakeMap *map)
     pixel_map_destroy(&map->board_pixel_map);
 }
 
-void load_tile_from_file(const char *path, PixelMap *target_map)
+int load_tile_from_file(const char *path, PixelMap *target_map)
 {
     bool error;
     std::string file_contents_str = read_file(path, &error);
     if (error)
     {
 	SNAKE_MSG("failed to read file %s\n", path);
-	exit(1);
+	return -1;
     }
 
     char *file_contents = (char*)file_contents_str.c_str();
@@ -214,6 +217,8 @@ void load_tile_from_file(const char *path, PixelMap *target_map)
 	    target_map->data[index].b = atoi(commas[1] + 1);
 	}
     }
+
+    return 0;
 }
 
 void write_tile_to_file(const char *path, RGBPixel *tile_data, int tile_width, int tile_height)

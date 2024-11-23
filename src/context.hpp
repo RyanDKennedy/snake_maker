@@ -12,9 +12,11 @@ struct Settings
 struct GenericCtx
 {
     bool mouse_clicked;
+    bool mouse_right_clicked;
     bool mouse_released;
     Vec2i mouse_pos;
     double mouse_scroll;
+
     double delta_time;
     GameState game_state;
     struct
@@ -25,7 +27,7 @@ struct GenericCtx
 	bool d;
 	bool space;
 	bool enter;
-	bool backspace;
+	bool escape;
     } keyboard;
     char last_pressed_key;
     

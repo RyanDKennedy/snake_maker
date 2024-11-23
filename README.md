@@ -48,13 +48,15 @@ These are all the keys supported, so if you need to do something but can't find 
 | s | down |
 | a | left |
 | d | right |
-| backspace | go back |
+| escape | go back |
 | space | pause |
 | mousewheel | scrolling on menus |
+| left click | select / primary function |
+| right click | secondary function |
 
 ## Custom Maps
-Please just use the built in map maker.
+Please just use the built in map creator.
 
 ## Custom Tiles
-Tile files are just a 2D array of RGB values, see the tiles folder.
+Please just use the built in tile creator. They are stored as a 10x10 grid of RGB values, however the format is a little bit sensitive. So make sure it has 9 lines with ```wc -l```.
 

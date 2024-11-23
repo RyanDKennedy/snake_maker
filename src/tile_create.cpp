@@ -1,9 +1,11 @@
 #include "tile_create.hpp"
+#include "collisions.hpp"
+#include "common.hpp"
 #include "drawing.hpp"
 #include "game_state.hpp"
-#include "increment_value.hpp"
 #include "pixel_map.hpp"
 #include "map.hpp"
+#include "text_box.hpp"
 
 #include <cstdlib>
 #include <cstring>
@@ -35,6 +37,18 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
 	ctx->old_colors[i].b = 0;
     }
 
+    ctx->text = text_box_create(25, Vec2i{150, 700}, 8, 2);
+    strcpy(ctx->text.text, "new");
+
+    ctx->save_btn = create_button("save", 100, 32, Vec2i{590, 700}, Vec3i{50, 50, 50}, Vec3i{255, 255, 0}, 8, 2)
+;
+    memcpy(&ctx->save_btn.bg_hover_color, &ctx->save_btn.fg_color, sizeof(Vec3i));
+    memcpy(&ctx->save_btn.fg_hover_color, &ctx->save_btn.bg_color, sizeof(Vec3i));
+
+    ctx->load_btn = create_button("load", 100, 32, Vec2i{690, 700}, Vec3i{50, 50, 50}, Vec3i{0, 200, 0}, 8, 2);
+    memcpy(&ctx->load_btn.bg_hover_color, &ctx->load_btn.fg_color, sizeof(Vec3i));
+    memcpy(&ctx->load_btn.fg_hover_color, &ctx->load_btn.bg_color, sizeof(Vec3i));
+
     return ctx;
 }
 
@@ -42,17 +56,12 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 {
     GameReturnCode return_code = GameReturnCode::none;
 
-    if (generic_ctx->keyboard.backspace)
+    if (generic_ctx->keyboard.escape)
     {
 	return_code = GameReturnCode::goto_menu;
     }
 
-/*
-    if (generic_ctx->keyboard.space)
-    {
-	write_tile_to_file("../share/tiles/new.tile", tile_create_ctx->tile, tile_create_ctx->tile_width, tile_create_ctx->tile_height);
-    }
-*/
+
 
     Vec2i tile_pos = {(pixel_map->width - tile_create_ctx->tile_pixmap.width) / 2, (pixel_map->height - tile_create_ctx->tile_pixmap.height) / 2};
     int pixel_width = tile_create_ctx->tile_pixmap.width / tile_create_ctx->tile_width;
@@ -72,6 +81,22 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 	    tile_create_ctx->green_slider.value = tile_create_ctx->old_colors[y].g;
 	    tile_create_ctx->blue_slider.value = tile_create_ctx->old_colors[y].b;
 
+	}
+    }
+
+    // See if right clicked tile
+    if (generic_ctx->mouse_right_clicked)
+    {
+	int x = (generic_ctx->mouse_pos[0] - tile_pos[0]) / pixel_width;
+	int y = (generic_ctx->mouse_pos[1] - tile_pos[1]) / pixel_height;
+
+	if (x >= 0 && x < tile_create_ctx->tile_width &&
+	    y >= 0 && y < tile_create_ctx->tile_height)
+	{
+	    const int index = x + y * tile_create_ctx->tile_width;
+	    tile_create_ctx->red_slider.value = tile_create_ctx->tile[index].r;
+	    tile_create_ctx->green_slider.value = tile_create_ctx->tile[index].g;
+	    tile_create_ctx->blue_slider.value = tile_create_ctx->tile[index].b;
 	}
     }
 
@@ -119,6 +144,7 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 	}
 
     }
+
 
     // Drawing old colors
     {
@@ -186,12 +212,68 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
     border_size = 5;
     draw_rectangle(pixel_map, tile_create_ctx->tile_pixmap.width + border_size * 2, tile_create_ctx->tile_pixmap.height + border_size * 2, Vec2i{tile_pos[0] - border_size, tile_pos[1] - border_size}, Vec3i{0, 0, 0});
     draw_pixmap(pixel_map, &tile_create_ctx->tile_pixmap, tile_pos);
-    
+
+    // Drawing text box
+    text_box_parse_key_list(&tile_create_ctx->text, generic_ctx->key_list);
+    draw_text_box(pixel_map, &tile_create_ctx->text);
+    draw_sentence(pixel_map, "name", 8, 2, Vec2i{80, 708}, Vec3i{255, 255, 0});
+
+    // save btn
+    {
+	bool hover = is_inside_collision_box(&tile_create_ctx->save_btn.col_box, generic_ctx->mouse_pos);
+
+	draw_button(pixel_map, &tile_create_ctx->save_btn, hover);
+
+	if (generic_ctx->mouse_released && hover)
+	{
+	    char buf[255] = {0};
+	    strcpy(buf, g_tile_dir);
+	    strcat(buf, tile_create_ctx->text.text);
+	    strcat(buf, g_tile_file_extension);
+
+	    write_tile_to_file(buf, tile_create_ctx->tile, tile_create_ctx->tile_width, tile_create_ctx->tile_height);
+	}
+    }
+
+    // load btn
+    {
+	bool hover = is_inside_collision_box(&tile_create_ctx->load_btn.col_box, generic_ctx->mouse_pos);
+
+	draw_button(pixel_map, &tile_create_ctx->load_btn, hover);
+
+	if (generic_ctx->mouse_released && hover)
+	{
+	    char buf[255] = {0};
+	    strcpy(buf, g_tile_dir);
+	    strcat(buf, tile_create_ctx->text.text);
+	    strcat(buf, g_tile_file_extension);
+
+	    PixelMap new_map = pixel_map_create(tile_create_ctx->tile_width, tile_create_ctx->tile_height);
+
+	    int status = load_tile_from_file(buf, &new_map);
+
+	    if (status == 0)
+	    {
+		for (int y = 0; y < new_map.height; ++y)
+		{
+		    for (int x = 0; x < new_map.height; ++x)
+		    {
+			const int index = y * new_map.width + x;
+			tile_create_ctx->tile[index] = new_map.data[index];
+		    }
+		}
+		
+		pixel_map_destroy(&new_map);
+	    }
+	}
+    }
+
     return return_code;
 }
 
 void tile_create_end(GenericCtx *generic_ctx, TileCreateCtx *tile_create_ctx)
 {
+    text_box_destroy(&tile_create_ctx->text);
     pixel_map_destroy(&tile_create_ctx->tile_pixmap);
     free(tile_create_ctx);
 }

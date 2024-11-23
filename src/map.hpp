@@ -22,7 +22,7 @@ struct SnakeMap
 SnakeMap* snake_map_create(const char *path);
 void snake_map_destroy(SnakeMap *map);
 
-void load_tile_from_file(const char *path, PixelMap *target_map);
+int load_tile_from_file(const char *path, PixelMap *target_map);
 void write_tile_to_file(const char *path, RGBPixel *tile_data, int tile_width, int tile_height);
 void load_grid_map(char **lines, int length, int *map);
 

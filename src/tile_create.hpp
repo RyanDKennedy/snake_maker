@@ -3,16 +3,9 @@
 #include "common.hpp"
 #include "context.hpp"
 #include "pixel_map.hpp"
-#include "increment_value.hpp"
 #include "slider.hpp"
-
-struct TextBox
-{
-    Vec2i pos;
-    int width;
-    int height;
-    char *text;
-};
+#include "text_box.hpp"
+#include "button.hpp"
 
 struct TileCreateCtx
 {
@@ -31,6 +24,10 @@ struct TileCreateCtx
     Slider blue_slider;
 
     PixelMap tile_pixmap;
+
+    TextBox text;
+    Button save_btn;
+    Button load_btn;
 
 };
 

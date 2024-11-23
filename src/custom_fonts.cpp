@@ -10,6 +10,19 @@ void init_fonts()
 
 void init_eightbitfont()
 {
+    for (int i = 0; i < 255; ++i)
+    {
+    g_eightbitfont[i] =
+	"11111111"
+	"1  11  1"
+	"1 1  1 1"
+	"1   1  1"
+	"1  1   1"
+	"1      1"
+	"1  1   1"
+	"11111111";
+    }
+
     g_eightbitfont[' '] =
 	"        "
 	"        "
