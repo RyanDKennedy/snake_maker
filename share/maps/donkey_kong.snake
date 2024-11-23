@@ -1,6 +1,6 @@
 [TileDefinitions]
 empty=0
-red=1
+hazard=1
 green=2
 new=3
 hazard=4

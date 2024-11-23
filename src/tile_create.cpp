@@ -15,7 +15,7 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
     TileCreateCtx *ctx = (TileCreateCtx*)calloc(1, sizeof(TileCreateCtx));
     for (int i = 0 ; i < ctx->tile_size; ++i)
     {
-	int value = 0;
+	int value = (int)(255.0 / (float)ctx->tile_size * (float)i);
 	ctx->tile[i].r = value;
 	ctx->tile[i].g = value;
 	ctx->tile[i].b = value;

@@ -50,7 +50,7 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
     // Play snake btn
     {
 	bool hover = is_inside_collision_box(&menu_ctx->play_snake_btn.col_box, generic_ctx->mouse_pos);
-	if (hover && generic_ctx->mouse_clicked)
+	if (hover && generic_ctx->mouse_released)
 	{
 	    return_code = GameReturnCode::play_snake;
 	}
@@ -60,7 +60,7 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
     // Create map btn
     {
 	bool hover = is_inside_collision_box(&menu_ctx->create_map_btn.col_box, generic_ctx->mouse_pos);
-	if (hover && generic_ctx->mouse_clicked)
+	if (hover && generic_ctx->mouse_released)
 	{
 	    return_code = GameReturnCode::none;
 	}
@@ -70,7 +70,7 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
     // Create tile btn
     {
 	bool hover = is_inside_collision_box(&menu_ctx->create_tile_btn.col_box, generic_ctx->mouse_pos);
-	if (hover && generic_ctx->mouse_clicked)
+	if (hover && generic_ctx->mouse_released)
 	{
 	    return_code = GameReturnCode::goto_tile_create;
 	}
@@ -80,7 +80,7 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
     // Settings btn
     {
 	bool hover = is_inside_collision_box(&menu_ctx->settings_btn.col_box, generic_ctx->mouse_pos);
-	if (hover && generic_ctx->mouse_clicked)
+	if (hover && generic_ctx->mouse_released)
 	{
 	    return_code = GameReturnCode::goto_settings;
 	}
@@ -146,7 +146,7 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
 	    // Option selecting
 	    Button global_space_btn = *current_btn;
 	    move_button(&global_space_btn, Vec2i{pixmap_x, pixmap_y}, true);
-	    if (is_inside_collision_box(&global_space_btn.col_box, generic_ctx->mouse_pos) && generic_ctx->mouse_clicked)
+	    if (is_inside_collision_box(&global_space_btn.col_box, generic_ctx->mouse_pos) && generic_ctx->mouse_released)
 	    {
 		menu_ctx->selected_map = i;
 	    }
