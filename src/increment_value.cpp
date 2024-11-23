@@ -32,6 +32,11 @@ IncrementValue create_increment_value(int initial_value, const char *name, Vec2i
 
     value.ready = true;
 
+    value.has_bottom_limit = false;
+    value.has_top_limit = false;
+
+    value.increment_amt = 1;
+
     return value;
 }
 
@@ -66,12 +71,22 @@ void update_increment_value(IncrementValue *val, Vec2i mouse_pos, bool mouse_cli
 	bool down_hover = is_inside_collision_box(&val->down.col_box, mouse_pos);
 
 	if (up_hover)
-	    ++val->value;
+	    val->value += val->increment_amt;
 	
-	if (down_hover && val->value > 0)
-	    --val->value;
+	if (down_hover)
+	    val->value -= val->increment_amt;
 
 	val->ready = false;
+    }
+
+    if (val->has_bottom_limit && val->value < val->bottom_limit)
+    {
+	val->value = val->bottom_limit;
+    }
+
+    if (val->has_top_limit && val->value > val->top_limit)
+    {
+	val->value = val->top_limit;
     }
 }
 

@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME}
   src/settings.cpp
   src/increment_value.cpp
   src/tile_create.cpp
+  src/slider.cpp
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD 17)

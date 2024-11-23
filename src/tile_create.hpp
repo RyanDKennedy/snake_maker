@@ -3,9 +3,25 @@
 #include "common.hpp"
 #include "context.hpp"
 #include "pixel_map.hpp"
+#include "increment_value.hpp"
+#include "slider.hpp"
 
 struct TileCreateCtx
 {
+    static const int tile_width = 10;
+    static const int tile_height = 10;
+    static const int tile_size = tile_width * tile_height;
+
+
+    RGBPixel current_color;
+
+    Slider red_slider;
+    Slider green_slider;
+    Slider blue_slider;
+
+    RGBPixel tile[tile_size];
+
+    PixelMap tile_pixmap;
 
 };
 

@@ -11,6 +11,11 @@ struct IncrementValue
     Button down;
     int value;
     bool ready;
+    int increment_amt;
+    bool has_bottom_limit;
+    int bottom_limit = 0;
+    bool has_top_limit;
+    int top_limit = 0;
 };
 
 IncrementValue create_increment_value(int initial_value, const char *name, Vec2i pos, Vec3i bg_color, Vec3i fg_color);
