@@ -10,7 +10,6 @@ SnakeMap* snake_map_create(const char *path)
     // Create map
     SnakeMap *map = (SnakeMap*)calloc(1, sizeof(SnakeMap));
 
-
     bool error;
     std::string file_contents_str = read_file(path, &error);
     if (error)
@@ -47,6 +46,7 @@ SnakeMap* snake_map_create(const char *path)
     }
 
     // Read the file and get pointers to each part
+    int settings_index;
     int tile_definitions_index;
     int board_map_index;
     int collision_map_index;
@@ -56,11 +56,20 @@ SnakeMap* snake_map_create(const char *path)
 	{
 	    const int line_len = strlen(lines[i]);
 
+	    const char *settings_str = "[Settings]";
+	    const int settings_str_len = strlen(settings_str);
+	    if (line_len >= settings_str_len && memcmp(lines[i], settings_str, settings_str_len) == 0)
+	    {
+		settings_index = i;
+		continue;
+	    }
+
 	    const char *tile_definitions_str = "[TileDefinitions]";
 	    const int tile_definitions_str_len = strlen(tile_definitions_str);
 	    if (line_len >= tile_definitions_str_len && memcmp(lines[i], tile_definitions_str, tile_definitions_str_len) == 0)
 	    {
 		tile_definitions_index = i;
+		continue;
 	    }
 
 	    const char *board_map_str = "[BoardMap]";
@@ -68,6 +77,7 @@ SnakeMap* snake_map_create(const char *path)
 	    if (line_len >= board_map_str_len && memcmp(lines[i], board_map_str, board_map_str_len) == 0)
 	    {
 		board_map_index = i;
+		continue;
 	    }
 
 	    const char *collision_map_str = "[CollisionMap]";
@@ -75,6 +85,7 @@ SnakeMap* snake_map_create(const char *path)
 	    if (line_len >= collision_map_str_len && memcmp(lines[i], collision_map_str, collision_map_str_len) == 0)
 	    {
 		collision_map_index = i;
+		continue;
 	    }
 
 	    const char *end_str = "[END]";
@@ -82,8 +93,73 @@ SnakeMap* snake_map_create(const char *path)
 	    if (line_len >= end_str_len && memcmp(lines[i], end_str, end_str_len) == 0)
 	    {
 		end_index = i;
+		continue;
 	    }
 	}
+    }
+
+
+    // Parse the settings
+    {
+#define CREATE_KEY_STR_VAR(name)			\
+    const char *name##_str = #name "=";			\
+    const size_t name##_str_len = strlen(name##_str);
+
+#define KEY_STR_COND(name)						\
+    (strlen(lines[i]) > name##_str_len && memcmp(lines[i], name##_str, name##_str_len) == 0)
+    
+#define KEY_STR_VALUE(name) &lines[i][name##_str_len]
+
+	CREATE_KEY_STR_VAR(starting_x)
+	CREATE_KEY_STR_VAR(starting_y);
+	CREATE_KEY_STR_VAR(starting_direction);
+	CREATE_KEY_STR_VAR(width);
+	CREATE_KEY_STR_VAR(height);
+	CREATE_KEY_STR_VAR(tile_width);
+	CREATE_KEY_STR_VAR(tile_height);
+
+	for (int i = settings_index; i < tile_definitions_index; ++i)
+	{
+	    if (KEY_STR_COND(starting_x))
+	    {
+		map->starting_pos[0] = atoi(KEY_STR_VALUE(starting_x));
+	    }
+	    else if (KEY_STR_COND(starting_y))
+	    {
+		map->starting_pos[1] = atoi(KEY_STR_VALUE(starting_y));
+	    }
+	    else if (KEY_STR_COND(width))
+	    {
+		map->width = atoi(KEY_STR_VALUE(width));
+
+	    }
+	    else if (KEY_STR_COND(height))
+	    {
+		map->height = atoi(KEY_STR_VALUE(height));
+	    }
+	    else if (KEY_STR_COND(tile_width))
+	    {
+		map->tile_width = atoi(KEY_STR_VALUE(tile_width));
+
+	    }
+	    else if (KEY_STR_COND(tile_height))
+	    {
+		map->tile_height = atoi(KEY_STR_VALUE(tile_height));
+	    }
+	    else if (KEY_STR_COND(starting_direction))
+	    {
+		map->starting_direction = atoi(KEY_STR_VALUE(starting_direction));
+	    }
+
+	}
+
+	// Calculated values
+	map->size = map->width * map->height;
+
+#undef CREATE_KEY_STR_VAR
+#undef KEY_STR_COND
+#undef KEY_STR_VALUE
+
     }
 
     // Create the tile maps
@@ -111,21 +187,25 @@ SnakeMap* snake_map_create(const char *path)
 	strcat(tile_path, tile_name);
 	strcat(tile_path, g_tile_file_extension);
 
-	map->tile_maps[tile_number] = pixel_map_create(10, 10);
+	map->tile_maps[tile_number] = pixel_map_create(map->tile_width, map->tile_height);
 	int status = load_tile_from_file(tile_path, &map->tile_maps[tile_number]);
 	if (status != 0)
+	{
+	    free(lines);
 	    exit(1);
-
+	}
     }
 
     // Get the board map
-    load_grid_map(lines + board_map_index + 1, collision_map_index - board_map_index - 1, map->board_map);
+    map->board_map = (int*)calloc(map->size, sizeof(int));
+    load_grid_map(lines + board_map_index + 1, map->board_map, map->width, map->height);
 
     // Get the collision map
-    load_grid_map(lines + collision_map_index + 1, end_index - collision_map_index - 1, map->collision_map);
+    map->collision_map = (int*)calloc(map->size, sizeof(int));
+    load_grid_map(lines + collision_map_index + 1, map->collision_map, map->width, map->height);
 
     // Create board pixel map
-    map->board_pixel_map = pixel_map_create(600, 600);
+    map->board_pixel_map = pixel_map_create(map->width * map->tile_width, map->height * map->tile_height);
     draw_snake_map(&map->board_pixel_map, map);
 
     free(lines);
@@ -140,6 +220,9 @@ void snake_map_destroy(SnakeMap *map)
 	pixel_map_destroy(&map->tile_maps[i]);
     }
     free(map->tile_maps);
+
+    free(map->board_map);
+    free(map->collision_map);
 
     pixel_map_destroy(&map->board_pixel_map);
 }
@@ -158,12 +241,12 @@ int load_tile_from_file(const char *path, PixelMap *target_map)
     const int file_len = strlen(file_contents);
 
     // Split into lines
-    const int line_amt = 10;
-    char *lines[line_amt];
+    int line_amt = target_map->height;
+    char **lines = (char**)calloc(line_amt, sizeof(char*));
     {
 	int num = 0;
 	lines[num++] = file_contents;
-	for (int i = 0; i < file_len; ++i)
+	for (int i = 0; i < file_len && num < line_amt; ++i)
 	{
 	    if (file_contents[i] == '\n')
 	    {
@@ -174,20 +257,22 @@ int load_tile_from_file(const char *path, PixelMap *target_map)
     }
     
     // Iterate across lines
+    int parens_amt = target_map->width;
+    char **parens = (char**)calloc(parens_amt, sizeof(char*));
+    
     for (int line_num = 0; line_num < line_amt; ++line_num)
     {
 	char *current_line = lines[line_num];
 	const int current_line_len = strlen(current_line);
 	
 	// Split into colors
-	const int parens_amt = 10;
-	const char *parens[parens_amt];
+
 	int num = 0;
-	for (int i = 0; i < current_line_len; ++i)
+	for (int i = 0; i < current_line_len && num < parens_amt; ++i)
 	{
 	    if (current_line[i] == ')')
 	    {
-		current_line[i + 1] = '\0';
+		current_line[i] = '\0';
 	    }
 	    if (current_line[i] == '(')
 	    {
@@ -217,6 +302,10 @@ int load_tile_from_file(const char *path, PixelMap *target_map)
 	    target_map->data[index].b = atoi(commas[1] + 1);
 	}
     }
+
+    free(parens);
+
+    free(lines);
 
     return 0;
 }
@@ -259,38 +348,31 @@ void write_tile_to_file(const char *path, RGBPixel *tile_data, int tile_width, i
     fclose(fd);
 }
 
-void load_grid_map(char **lines, int length, int *map)
+void load_grid_map(char **lines, int *map, int width, int height)
 {
     // count commas
-    int comma_amt = 0;
-    ++comma_amt;
-    for (int i = 0; i < strlen(lines[0]); ++i)
-    {
-	if (lines[0][i] == ',')
-	    ++comma_amt;
-    }
-    
+    int comma_amt = width;
+
     // Go through each line
     int *comma_indices = (int*)calloc(comma_amt, sizeof(int));
-    for (int line_num = 0; line_num < length; ++line_num)
+    for (int line_num = 0; line_num < height; ++line_num)
     {
 	// Get comma indices on the line
-	comma_amt = 0;
-	comma_indices[comma_amt++] = -1;
-	for (int i = 0; i < strlen(lines[0]); ++i)
+	int num = 0;
+	comma_indices[num++] = -1;
+	for (int i = 0; i < strlen(lines[0]) && num < width; ++i)
 	{
 	    if (lines[0][i] == ',')
 	    {
-		comma_indices[comma_amt++] = i;
+		comma_indices[num++] = i;
 	    }	    
 	}
-	
+
 	// Fill in the data
 	for (int i = 0; i < comma_amt; ++i)
 	{
-	    map[line_num*length + i] = atoi(&lines[line_num][comma_indices[i] + 1]);
+	    map[line_num*width + i] = atoi(&lines[line_num][comma_indices[i] + 1]);
 	}
-
     }
 
     free(comma_indices);

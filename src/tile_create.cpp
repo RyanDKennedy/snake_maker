@@ -22,9 +22,9 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
     }
     ctx->tile_pixmap = pixel_map_create(400, 400);
 
-    ctx->red_slider = slider_create(0, 255, 800, 30, Vec2i{0, 90});
-    ctx->green_slider = slider_create(0, 255, 800, 30, Vec2i{0, 50});
-    ctx->blue_slider = slider_create(0, 255, 800, 30, Vec2i{0, 10});
+    ctx->red_slider = slider_create(0, 255, 600, 30, Vec2i{100, 90});
+    ctx->green_slider = slider_create(0, 255, 600, 30, Vec2i{100, 50});
+    ctx->blue_slider = slider_create(0, 255, 600, 30, Vec2i{100, 10});
 
     ctx->current_color.r = ctx->red_slider.value;
     ctx->current_color.g = ctx->green_slider.value;

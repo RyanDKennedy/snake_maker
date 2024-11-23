@@ -1,3 +1,11 @@
+[Settings]
+width=60
+height=60
+starting_x=30
+starting_y=30
+starting_direction=0
+tile_width=10
+tile_height=10
 [TileDefinitions]
 empty=0
 hazard=1

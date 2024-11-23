@@ -4,7 +4,6 @@
 #include "game_state.hpp"
 #include "map.hpp"
 
-#include <chrono>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -20,13 +19,26 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
     snake_ctx->map = snake_map_create(snake_ctx->map_path);
 
     SnakeSegment head;
-    head.pos[0] = 30;
-    head.pos[1] = 30;
+    head.pos[0] = snake_ctx->map->starting_pos[0];
+    head.pos[1] = snake_ctx->map->starting_pos[1];
     snake_ctx->snake.push_front(head);
-    snake_ctx->snake_dir = SnakeDir::up;
-    snake_ctx->snake_dir_old = SnakeDir::up;
-
     snake_ctx->time_since_last_move = 0.0f;
+    switch (snake_ctx->map->starting_direction)
+    {
+	case 0:
+	    snake_ctx->snake_dir = SnakeDir::up;
+	    break;
+	case 1:
+	    snake_ctx->snake_dir = SnakeDir::right;
+	    break;
+	case 2:
+	    snake_ctx->snake_dir = SnakeDir::down;
+	    break;
+	case 3:
+	    snake_ctx->snake_dir = SnakeDir::left;
+	    break;
+    }
+    snake_ctx->snake_dir_old = snake_ctx->snake_dir;
 
     snake_ctx->add_segments = generic_ctx->settings.starting_size;
 
@@ -47,11 +59,21 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 {
     GameReturnCode return_code = GameReturnCode::none;
 
+    const int border_size = 15;
+
+    Vec2i map_pos;
+    map_pos[0] = pixel_map->width / 2 - (snake_ctx->map->width * snake_ctx->map->tile_width) / 2;
+    map_pos[1] = pixel_map->height / 2 - (snake_ctx->map->height * snake_ctx->map->tile_height) / 2;
+
+    Vec2i border_pos;
+    border_pos[0] = map_pos[0] - border_size;
+    border_pos[1] = map_pos[1] - border_size;
+
     // Draw outline
-    draw_rectangle(pixel_map, 650, 650, Vec2i{75, 75}, Vec3i{50, 50, 50});
+    draw_rectangle(pixel_map, (snake_ctx->map->width * snake_ctx->map->tile_width) + 2*border_size, (snake_ctx->map->height * snake_ctx->map->tile_height) + 2*border_size, border_pos, Vec3i{50, 50, 50});
     
     // Draw map
-    draw_pixmap(pixel_map, &snake_ctx->map->board_pixel_map, Vec2i{100, 100});
+    draw_pixmap(pixel_map, &snake_ctx->map->board_pixel_map, map_pos);
 
     // Parse Input
     switch (generic_ctx->last_pressed_key)
@@ -76,11 +98,18 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 	    break;
     }
 
+    float speed = snake_ctx->speed;
+    if (generic_ctx->keyboard.space)
+    {
+	speed /= 2;
+    }
+
+
     // Update snake
     snake_ctx->time_since_last_move += generic_ctx->delta_time;
-    while (snake_ctx->time_since_last_move > snake_ctx->speed)
+    while (snake_ctx->time_since_last_move > speed)
     {
-	snake_ctx->time_since_last_move -= snake_ctx->speed;
+	snake_ctx->time_since_last_move -= speed;
 
 	snake_ctx->snake_dir_old = snake_ctx->snake_dir;
 
@@ -179,17 +208,15 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
     // Draw Apples
     for (int i = 0; i < snake_ctx->apples_amt; ++i)
     {
-	draw_rectangle(pixel_map, 10, 10, Vec2i{100 + 10 * snake_ctx->apples[i][0], 100 + 10 * snake_ctx->apples[i][1]}, Vec3i{255, 0, 0});
+	draw_rectangle(pixel_map, snake_ctx->map->tile_width, snake_ctx->map->tile_height, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->apples[i][0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->apples[i][1]}, Vec3i{255, 0, 0});
     }
-
 
     // Draw snake
-    draw_rectangle(pixel_map, 10, 10, Vec2i{100 + 10 * snake_ctx->snake.front().pos[0], 100 + 10 * snake_ctx->snake.front().pos[1]}, Vec3i{150, 90, 0});
+    draw_rectangle(pixel_map, snake_ctx->map->tile_width, snake_ctx->map->tile_height, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake.front().pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake.front().pos[1]}, Vec3i{150, 90, 0});
     for (int i = 1; i < snake_ctx->snake.size(); ++i)
     {
-	draw_rectangle(pixel_map, 10, 10, Vec2i{100 + 10 * snake_ctx->snake[i].pos[0], 100 + 10 * snake_ctx->snake[i].pos[1]}, Vec3i{0, 170, 0});
+	draw_rectangle(pixel_map, snake_ctx->map->tile_width, snake_ctx->map->tile_height, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake[i].pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake[i].pos[1]}, Vec3i{0, 170, 0});
     }
-
 
     if (generic_ctx->keyboard.escape)
     {

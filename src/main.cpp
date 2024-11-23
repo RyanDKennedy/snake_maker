@@ -91,6 +91,9 @@ int main(void)
     generic_context.game_state = GameState::menu;
     generic_context.settings = settings_from_file(g_settings_file);
     generic_context.key_list = key_list;
+    generic_context.mouse_clicked = false;
+    generic_context.mouse_released = false;
+    generic_context.mouse_right_clicked = false;
 
     // Initialize specific_context
     void* specific_context = (void*)menu_start(&generic_context);
