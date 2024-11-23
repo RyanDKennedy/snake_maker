@@ -2,6 +2,7 @@
 #include "game_state.hpp"
 #include "increment_value.hpp"
 #include "pixel_map.hpp"
+#include "map.hpp"
 
 #include <cstdlib>
 #include <cstring>
@@ -11,7 +12,6 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
     TileCreateCtx *ctx = (TileCreateCtx*)calloc(1, sizeof(TileCreateCtx));
     for (int i = 0 ; i < ctx->tile_size; ++i)
     {
-//	int value = (int)(255.0 / (float)ctx->tile_size * (float)i);
 	int value = 0;
 	ctx->tile[i].r = value;
 	ctx->tile[i].g = value;
@@ -19,34 +19,13 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
     }
     ctx->tile_pixmap = pixel_map_create(400, 400);
 
-/*
-    ctx->red_value = create_increment_value(0, "red", Vec2i{0, 0}, Vec3i{0, 0, 0}, Vec3i{255, 0, 0});
-    ctx->red_value.has_bottom_limit = true;
-    ctx->red_value.bottom_limit = 0;
-    ctx->red_value.has_top_limit = true;
-    ctx->red_value.top_limit = 255;
-    ctx->red_value.increment_amt = 10;
-
-    ctx->green_value = create_increment_value(0, "green", Vec2i{0, 32}, Vec3i{0, 0, 0}, Vec3i{0, 255, 0});
-    ctx->green_value.has_bottom_limit = true;
-    ctx->green_value.bottom_limit = 0;
-    ctx->green_value.has_top_limit = true;
-    ctx->green_value.top_limit = 255;
-    ctx->green_value.increment_amt = 10;
-
-    ctx->blue_value = create_increment_value(0, "blue", Vec2i{0, 64}, Vec3i{0, 0, 0}, Vec3i{0, 0, 255});
-    ctx->blue_value.has_bottom_limit = true;
-    ctx->blue_value.bottom_limit = 0;
-    ctx->blue_value.has_top_limit = true;
-    ctx->blue_value.top_limit = 255;
-    ctx->blue_value.increment_amt = 10;
-*/
-
-//    ctx->current_color = {(uint8_t)ctx->red_value.value, (uint8_t)ctx->green_value.value, (uint8_t)ctx->blue_value.value};
-
     ctx->red_slider = slider_create(0, 255, 800, 30, Vec2i{0, 90});
     ctx->green_slider = slider_create(0, 255, 800, 30, Vec2i{0, 50});
     ctx->blue_slider = slider_create(0, 255, 800, 30, Vec2i{0, 10});
+
+    ctx->current_color.r = ctx->red_slider.value;
+    ctx->current_color.g = ctx->green_slider.value;
+    ctx->current_color.b = ctx->blue_slider.value;
 
     return ctx;
 }
@@ -59,6 +38,13 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
     {
 	return_code = GameReturnCode::goto_menu;
     }
+
+/*
+    if (generic_ctx->keyboard.space)
+    {
+	write_tile_to_file("../share/tiles/new.tile", tile_create_ctx->tile, tile_create_ctx->tile_width, tile_create_ctx->tile_height);
+    }
+*/
 
     Vec2i tile_pos = {(pixel_map->width - tile_create_ctx->tile_pixmap.width) / 2, (pixel_map->height - tile_create_ctx->tile_pixmap.height) / 2};
     int pixel_width = tile_create_ctx->tile_pixmap.width / tile_create_ctx->tile_width;

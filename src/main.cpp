@@ -89,6 +89,7 @@ int main(void)
     GenericCtx generic_context;
     generic_context.game_state = GameState::menu;
     generic_context.settings = settings_from_file(g_settings_file);
+    generic_context.key_list = key_list;
 
     // Initialize specific_context
     void* specific_context = (void*)menu_start(&generic_context);
@@ -143,7 +144,6 @@ int main(void)
 	    generic_context.last_pressed_key = key_list[strlen(key_list) - 1];	    
 	else
 	    generic_context.last_pressed_key = '\0';
-
 	
 	// Clear
 	memset(pixel_map.data, 0, pixel_map.size * sizeof(RGBPixel));
@@ -300,23 +300,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
 
     char c[2] = {0};
-    switch (key)
-    {
-	case GLFW_KEY_W:
-	    c[0] = 'w';
-	    break;
-	case GLFW_KEY_A:
-	    c[0] = 'a';
-	    break;
-	case GLFW_KEY_S:
-	    c[0] = 's';
-	    break;
-	case GLFW_KEY_D:
-	    c[0] = 'd';
-	    break;
+    c[0] = key;
 
-	default:
-	    return;
+    if (key == GLFW_KEY_BACKSPACE)
+    {
+	c[0] = '\b';
     }
 
     strcat(key_list, c);

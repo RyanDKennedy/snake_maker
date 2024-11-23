@@ -28,6 +28,8 @@ struct GenericCtx
 	bool backspace;
     } keyboard;
     char last_pressed_key;
-
+    
     Settings settings;
+
+    char *key_list;
 };

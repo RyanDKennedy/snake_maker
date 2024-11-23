@@ -6,12 +6,19 @@
 #include "increment_value.hpp"
 #include "slider.hpp"
 
+struct TextBox
+{
+    Vec2i pos;
+    int width;
+    int height;
+    char *text;
+};
+
 struct TileCreateCtx
 {
     static const int tile_width = 10;
     static const int tile_height = 10;
     static const int tile_size = tile_width * tile_height;
-
 
     RGBPixel current_color;
 

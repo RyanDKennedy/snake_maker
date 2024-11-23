@@ -126,7 +126,7 @@ SnakeMap* snake_map_create(const char *path)
     draw_snake_map(&map->board_pixel_map, map);
 
     free(lines);
-    
+
     return map;
 }
 
@@ -198,7 +198,7 @@ void load_tile_from_file(const char *path, PixelMap *target_map)
 	{
 	    // fill color channels
 
-	    const int index = (line_amt - line_num - 1) * parens_amt + x; 
+	    const int index = line_num * parens_amt + x; 
 	    target_map->data[index].r = atoi(parens[x] + 1);
 
 	    const char *commas[2];
@@ -214,6 +214,44 @@ void load_tile_from_file(const char *path, PixelMap *target_map)
 	    target_map->data[index].b = atoi(commas[1] + 1);
 	}
     }
+}
+
+void write_tile_to_file(const char *path, RGBPixel *tile_data, int tile_width, int tile_height)
+{
+    FILE *fd = fopen(path, "w+");
+    if (fd == NULL)
+    {
+	exit(1);
+    }
+
+    char buf[256];
+    for (int y = 0; y < tile_height - 1; ++y)
+    {
+	for (int x = 0; x < tile_width - 1; ++x)
+	{
+	    const int index = y * tile_width + x;
+	    snprintf(buf, 256, "(%d, %d, %d), ", tile_data[index].r, tile_data[index].g, tile_data[index].b);
+	    fwrite(buf, sizeof(char), strlen(buf), fd);
+	}
+	int x = tile_width - 1;
+	const int index = y * tile_width + x;
+	snprintf(buf, 256, "(%d, %d, %d),\n", tile_data[index].r, tile_data[index].g, tile_data[index].b);
+	fwrite(buf, sizeof(char), strlen(buf), fd);
+    }
+
+    int y = tile_height - 1;
+    for (int x = 0; x < tile_width - 1; ++x)
+    {
+	const int index = y * tile_width + x;
+	snprintf(buf, 256, "(%d, %d, %d), ", tile_data[index].r, tile_data[index].g, tile_data[index].b);
+	fwrite(buf, sizeof(char), strlen(buf), fd);
+    }
+    int x = tile_width - 1;
+    const int index = y * tile_width + x;
+    snprintf(buf, 256, "(%d, %d, %d),", tile_data[index].r, tile_data[index].g, tile_data[index].b);
+    fwrite(buf, sizeof(char), strlen(buf), fd);
+    
+    fclose(fd);
 }
 
 void load_grid_map(char **lines, int length, int *map)

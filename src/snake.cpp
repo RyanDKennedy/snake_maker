@@ -56,19 +56,19 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
     // Parse Input
     switch (generic_ctx->last_pressed_key)
     {
-	case 'w':
+	case 'W':
 	    if (snake_ctx->snake_dir_old != SnakeDir::down)
 		snake_ctx->snake_dir = SnakeDir::up;
 	    break;
-	case 'a':
+	case 'A':
 	    if (snake_ctx->snake_dir_old != SnakeDir::right)
 		snake_ctx->snake_dir = SnakeDir::left;
 	    break;
-	case 's':
+	case 'S':
 	    if (snake_ctx->snake_dir_old != SnakeDir::up)
 		snake_ctx->snake_dir = SnakeDir::down;
 	    break;
-	case 'd':
+	case 'D':
 	    if (snake_ctx->snake_dir_old != SnakeDir::left)
 		snake_ctx->snake_dir = SnakeDir::right;
 	    break;
