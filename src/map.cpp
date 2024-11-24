@@ -225,6 +225,8 @@ void snake_map_destroy(SnakeMap *map)
     free(map->collision_map);
 
     pixel_map_destroy(&map->board_pixel_map);
+
+    free(map);
 }
 
 int load_tile_from_file(const char *path, PixelMap *target_map)

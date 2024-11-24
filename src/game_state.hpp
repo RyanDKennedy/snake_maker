@@ -18,4 +18,5 @@ enum class GameReturnCode
     goto_menu,
     goto_settings,
     goto_tile_create,
+    goto_map_create,
 };

@@ -21,6 +21,7 @@
 #include "snake.hpp"
 #include "settings.hpp"
 #include "tile_create.hpp"
+#include "map_create.hpp"
 
 double scroll_y_offset = 0.0;
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
@@ -176,6 +177,7 @@ int main(void)
 	    }
 	    case GameState::map_create:
 	    {
+		return_code = map_create_run(&pixel_map, &generic_context, (MapCreateCtx*)specific_context);
 		break;
 	    }
 	    case GameState::tile_create:
@@ -216,12 +218,14 @@ int main(void)
 		}
 		case GameState::map_create:
 		{
+		    MapCreateCtx *map_create_ctx = (MapCreateCtx*)specific_context;
+		    map_create_end(map_create_ctx);		    
 		    break;
 		}
 		case GameState::tile_create:
 		{
 		    TileCreateCtx *tile_create_ctx = (TileCreateCtx*)specific_context;
-		    tile_create_end(&generic_context, tile_create_ctx);		    
+		    tile_create_end(tile_create_ctx);		    
 		    break;
 		}
 	    }
@@ -259,6 +263,13 @@ int main(void)
 		generic_context.game_state = GameState::tile_create;
 		break;
 	    }
+	    case GameReturnCode::goto_map_create:
+	    {
+		specific_context = (void*)map_create_start(&generic_context);
+		generic_context.game_state = GameState::map_create;
+		break;		
+	    }
+
 	}
 
 	// Draw Top Bar

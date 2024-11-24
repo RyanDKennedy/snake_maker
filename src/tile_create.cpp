@@ -271,7 +271,7 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
     return return_code;
 }
 
-void tile_create_end(GenericCtx *generic_ctx, TileCreateCtx *tile_create_ctx)
+void tile_create_end(TileCreateCtx *tile_create_ctx)
 {
     text_box_destroy(&tile_create_ctx->text);
     pixel_map_destroy(&tile_create_ctx->tile_pixmap);

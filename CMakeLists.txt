@@ -4,7 +4,14 @@ set(CMAKE_CXX_COMPILER "clang++")
 cmake_minimum_required(VERSION 3.22.1)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if(UNIX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+endif(UNIX)
+
+if(CMAKE_BUILD_TYPE EQUAL "Debug")
+	set(CMAKE_CXX_FLAGS "$CMAKE_CXX_FLAGS} -g3")
+endif()
 
 project(snake_maker)
 
@@ -36,6 +43,7 @@ add_executable(${PROJECT_NAME}
   src/tile_create.cpp
   src/slider.cpp
   src/text_box.cpp
+  src/map_create.cpp
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD 17)
