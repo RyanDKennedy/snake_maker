@@ -23,11 +23,11 @@ SettingsCtx* settings_start(GenericCtx *generic_ctx)
 
     *starting_speed = create_increment_value(generic_ctx->settings.starting_speed, "starting_speed", Vec2i{200, 500}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
     starting_speed->has_bottom_limit = true;
-    starting_speed->bottom_limit = 0;
+    starting_speed->bottom_limit = 1;
 
     *starting_size = create_increment_value(generic_ctx->settings.starting_size, "starting_size", Vec2i{200, 450}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
     starting_size->has_bottom_limit = true;
-    starting_size->bottom_limit = 0;
+    starting_size->bottom_limit = 1;
 
     return ctx;
 }

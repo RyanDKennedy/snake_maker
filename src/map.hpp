@@ -25,6 +25,28 @@ struct SnakeMap
 
     Vec2i starting_pos;
     int starting_direction; // 0 = up, 1 = right, 2 = down, 3 = left
+
+    PixelMap apple_tile;
+
+    struct
+    {
+	PixelMap vertical;
+	PixelMap horizontal;	
+	PixelMap left_up;	
+	PixelMap right_up;
+	PixelMap left_down;	
+	PixelMap right_down;
+
+	PixelMap tail_down;
+	PixelMap tail_up;
+	PixelMap tail_left;
+	PixelMap tail_right;
+
+	PixelMap head_down;
+	PixelMap head_up;
+	PixelMap head_left;
+	PixelMap head_right;	
+    } snake_skin;
 };
 
 SnakeMap* snake_map_create(const char *path);
@@ -33,5 +55,7 @@ void snake_map_destroy(SnakeMap *map);
 int load_tile_from_file(const char *path, PixelMap *target_map);
 void write_tile_to_file(const char *path, RGBPixel *tile_data, int tile_width, int tile_height);
 void load_grid_map(char **lines, int *map, int width, int height);
+void load_skin(const char *path, SnakeMap *map);
+
 
 void draw_snake_map(PixelMap *target_map, SnakeMap *map);

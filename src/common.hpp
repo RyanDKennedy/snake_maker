@@ -13,6 +13,8 @@ inline const char *g_map_file_extension = ".snake";
 inline const char *g_tile_dir = "../share/tiles/";
 inline const char *g_tile_file_extension = ".tile";
 inline const char *g_settings_file = "../share/settings";
+inline const char *g_skin_dir = "../share/skins/";
+inline const char *g_skin_file_extension = ".skin";
 
 inline const char *g_shader_vertex_code =
 "#version 330\n\

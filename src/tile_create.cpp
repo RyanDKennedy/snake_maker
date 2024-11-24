@@ -13,6 +13,11 @@
 TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
 {
     TileCreateCtx *ctx = (TileCreateCtx*)calloc(1, sizeof(TileCreateCtx));
+    ctx->tile_width = 10;
+    ctx->tile_height = 10;
+    ctx->tile_size = ctx->tile_width * ctx->tile_height;
+    ctx->tile = (RGBPixel*)calloc(ctx->tile_size, sizeof(RGBPixel));
+
     for (int i = 0 ; i < ctx->tile_size; ++i)
     {
 	int value = (int)(255.0 / (float)ctx->tile_size * (float)i);
@@ -273,6 +278,7 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 
 void tile_create_end(TileCreateCtx *tile_create_ctx)
 {
+    free(tile_create_ctx->tile);
     text_box_destroy(&tile_create_ctx->text);
     pixel_map_destroy(&tile_create_ctx->tile_pixmap);
     free(tile_create_ctx);

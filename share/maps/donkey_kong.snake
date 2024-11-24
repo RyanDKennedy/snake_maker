@@ -6,6 +6,7 @@ starting_y=30
 starting_direction=0
 tile_width=10
 tile_height=10
+skin=arrow
 [TileDefinitions]
 empty=0
 hazard=1

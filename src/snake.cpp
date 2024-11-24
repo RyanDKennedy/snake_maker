@@ -208,15 +208,89 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
     // Draw Apples
     for (int i = 0; i < snake_ctx->apples_amt; ++i)
     {
-	draw_rectangle(pixel_map, snake_ctx->map->tile_width, snake_ctx->map->tile_height, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->apples[i][0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->apples[i][1]}, Vec3i{255, 0, 0});
+	draw_pixmap(pixel_map, &snake_ctx->map->apple_tile, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->apples[i][0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->apples[i][1]});
+//	draw_rectangle(pixel_map, snake_ctx->map->tile_width, snake_ctx->map->tile_height, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->apples[i][0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->apples[i][1]}, Vec3i{255, 0, 0});
     }
 
     // Draw snake
-    draw_rectangle(pixel_map, snake_ctx->map->tile_width, snake_ctx->map->tile_height, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake.front().pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake.front().pos[1]}, Vec3i{150, 90, 0});
-    for (int i = 1; i < snake_ctx->snake.size(); ++i)
     {
-	draw_rectangle(pixel_map, snake_ctx->map->tile_width, snake_ctx->map->tile_height, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake[i].pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake[i].pos[1]}, Vec3i{0, 170, 0});
+	PixelMap *pix_map;
+
+	switch (snake_ctx->snake_dir_old)
+	{
+	    case SnakeDir::up:
+		pix_map = &snake_ctx->map->snake_skin.head_up;
+		break;
+	    case SnakeDir::down:
+		pix_map = &snake_ctx->map->snake_skin.head_down;
+		break;
+	    case SnakeDir::left:
+		pix_map = &snake_ctx->map->snake_skin.head_left;
+		break;
+	    case SnakeDir::right:
+		pix_map = &snake_ctx->map->snake_skin.head_right;
+		break;
+	}
+
+	draw_pixmap(pixel_map, pix_map, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake.front().pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake.front().pos[1]});
+
+	for (int i = 1; i < snake_ctx->snake.size() - 1; ++i)
+	{
+
+	    int index1 = (snake_ctx->snake[i - 1].pos[0] < snake_ctx->snake[i + 1].pos[0])? i - 1 : i + 1;
+	    int index2 = (snake_ctx->snake[i - 1].pos[0] < snake_ctx->snake[i + 1].pos[0])? i + 1 : i - 1;
+	    
+	    Vec2i pos1;
+	    pos1[0] = snake_ctx->snake[index1].pos[0];
+	    pos1[1] = snake_ctx->snake[index1].pos[1];
+	    Vec2i pos2;
+	    pos2[0] = snake_ctx->snake[index2].pos[0];
+	    pos2[1] = snake_ctx->snake[index2].pos[1];
+	    
+	    float dx = pos1[0] - pos2[0];
+	    float dy = pos1[1] - pos2[1];
+	    
+	    if (dx == 0 && dy != 0)
+	    {
+		pix_map = &snake_ctx->map->snake_skin.vertical;
+	    }
+	    else if (dy == 0 && dx != 0)
+	    {
+		pix_map = &snake_ctx->map->snake_skin.horizontal;
+	    }
+	    else if (dx == dy && pos1[1] != snake_ctx->snake[i].pos[1])
+	    {
+		pix_map = &snake_ctx->map->snake_skin.right_down;
+	    }
+	    else if (dx == -dy && pos1[1] != snake_ctx->snake[i].pos[1])
+	    {
+		pix_map = &snake_ctx->map->snake_skin.right_up;
+	    }
+	    else if (dx == dy && pos1[1] == snake_ctx->snake[i].pos[1])
+	    {
+		pix_map = &snake_ctx->map->snake_skin.left_up;
+	    }
+	    else if (dx == -dy && pos1[1] == snake_ctx->snake[i].pos[1])
+	    {
+		pix_map = &snake_ctx->map->snake_skin.left_down;
+	    }
+
+	    draw_pixmap(pixel_map, pix_map, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake[i].pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake[i].pos[1]});
+	}
+	int dx = snake_ctx->snake[snake_ctx->snake.size() - 2].pos[0] - snake_ctx->snake.back().pos[0];
+	int dy = snake_ctx->snake[snake_ctx->snake.size() - 2].pos[1] - snake_ctx->snake.back().pos[1];
+	if (dx == 1)
+	    pix_map = &snake_ctx->map->snake_skin.tail_right;
+	else if (dx == -1)
+	    pix_map = &snake_ctx->map->snake_skin.tail_left;
+	else if (dy == 1)
+	    pix_map = &snake_ctx->map->snake_skin.tail_up;
+	else if (dy == -1)
+	    pix_map = &snake_ctx->map->snake_skin.tail_down;
+
+	draw_pixmap(pixel_map, pix_map, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake.back().pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake.back().pos[1]});
     }
+    
 
     if (generic_ctx->keyboard.escape)
     {

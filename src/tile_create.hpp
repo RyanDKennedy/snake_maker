@@ -9,10 +9,10 @@
 
 struct TileCreateCtx
 {
-    static const int tile_width = 10;
-    static const int tile_height = 10;
-    static const int tile_size = tile_width * tile_height;
-    RGBPixel tile[tile_size];
+     int tile_width;
+     int tile_height;
+    int tile_size;
+    RGBPixel *tile;
 
     RGBPixel current_color;
     

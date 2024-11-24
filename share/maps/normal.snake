@@ -6,6 +6,7 @@ tile_height=10
 starting_x=30
 starting_y=30
 starting_direction=0
+skin=arrow
 [TileDefinitions]
 empty=0
 solid=1

@@ -1,4 +1,6 @@
 #include "map.hpp"
+#include "common.hpp"
+#include "pixel_map.hpp"
 
 #include <cstdlib>
 #include <cstring>
@@ -117,44 +119,63 @@ SnakeMap* snake_map_create(const char *path)
 	CREATE_KEY_STR_VAR(height);
 	CREATE_KEY_STR_VAR(tile_width);
 	CREATE_KEY_STR_VAR(tile_height);
+	CREATE_KEY_STR_VAR(skin);
+
+
+	char skin[256];
 
 	for (int i = settings_index; i < tile_definitions_index; ++i)
 	{
 	    if (KEY_STR_COND(starting_x))
 	    {
 		map->starting_pos[0] = atoi(KEY_STR_VALUE(starting_x));
+		continue;
 	    }
 	    else if (KEY_STR_COND(starting_y))
 	    {
 		map->starting_pos[1] = atoi(KEY_STR_VALUE(starting_y));
+		continue;
 	    }
 	    else if (KEY_STR_COND(width))
 	    {
 		map->width = atoi(KEY_STR_VALUE(width));
-
+		continue;
 	    }
 	    else if (KEY_STR_COND(height))
 	    {
 		map->height = atoi(KEY_STR_VALUE(height));
+		continue;
 	    }
 	    else if (KEY_STR_COND(tile_width))
 	    {
 		map->tile_width = atoi(KEY_STR_VALUE(tile_width));
-
+		continue;
 	    }
 	    else if (KEY_STR_COND(tile_height))
 	    {
 		map->tile_height = atoi(KEY_STR_VALUE(tile_height));
+		continue;
 	    }
 	    else if (KEY_STR_COND(starting_direction))
 	    {
 		map->starting_direction = atoi(KEY_STR_VALUE(starting_direction));
+		continue;
 	    }
-
+	    else if (KEY_STR_COND(skin))
+	    {
+		strcpy(skin, KEY_STR_VALUE(skin));
+		continue;
+	    }
 	}
 
 	// Calculated values
 	map->size = map->width * map->height;
+
+	// load skin
+	char buf[256];
+	snprintf(buf, 256, "%s%s%s", g_skin_dir, skin, g_skin_file_extension);
+	load_skin(buf, map);
+
 
 #undef CREATE_KEY_STR_VAR
 #undef KEY_STR_COND
@@ -225,6 +246,15 @@ void snake_map_destroy(SnakeMap *map)
     free(map->collision_map);
 
     pixel_map_destroy(&map->board_pixel_map);
+
+    pixel_map_destroy(&map->apple_tile);
+
+    pixel_map_destroy(&map->snake_skin.horizontal);
+    pixel_map_destroy(&map->snake_skin.vertical);
+    pixel_map_destroy(&map->snake_skin.left_up);
+    pixel_map_destroy(&map->snake_skin.right_up);
+    pixel_map_destroy(&map->snake_skin.left_down);
+    pixel_map_destroy(&map->snake_skin.right_down);
 
     free(map);
 }
@@ -392,4 +422,169 @@ void draw_snake_map(PixelMap *target_map, SnakeMap *map)
 	    draw_pixmap(target_map, current_tile_map, Vec2i{x * current_tile_map->width, y * current_tile_map->height});
 	}
     }
+}
+
+void load_skin(const char *path, SnakeMap *map)
+{
+    // Split file into lines
+    bool error;
+    std::string file_contents_str = read_file(path, &error);
+    if (error)
+    {
+	SNAKE_MSG("failed to read file %s\n", path);
+	exit(1);
+    }
+    char *file_contents = (char*)file_contents_str.c_str();
+    const int file_len = strlen(file_contents);
+
+    // Split the file into each line
+    int line_amt = 1;
+    char **lines = NULL;
+    {
+	// Get amount of lines
+	for (int i = 0; i < file_len; ++i)
+	{
+	    if (file_contents[i] == '\n')
+		++line_amt;
+	}
+
+	// Allocate and fill lines
+	lines = (char**)(calloc(line_amt, sizeof(char*)));
+	int num = 0;
+	lines[num++] = file_contents;
+	for (int i = 0; i < file_len; ++i)
+	{
+	    if (file_contents[i] == '\n')
+	    {
+		file_contents[i] = '\0';
+		lines[num++] = file_contents + i + 1;
+	    }
+	}
+    }
+
+#define CREATE_KEY_STR_VAR(name)			\
+    const char *name##_str = #name "=";			\
+    const size_t name##_str_len = strlen(name##_str);
+    
+#define KEY_STR_COND(name)						\
+    (strlen(lines[i]) > name##_str_len && memcmp(lines[i], name##_str, name##_str_len) == 0)
+    
+#define KEY_STR_VALUE(name) &lines[i][name##_str_len]
+
+#define SNAKE_LOAD_SKIN(name)						\
+    snprintf(buf, 256, "%s%s%s", g_tile_dir, KEY_STR_VALUE(snake_##name##_tile), g_tile_file_extension); \
+    map->snake_skin.name = pixel_map_create(map->tile_width, map->tile_height);	\
+    load_tile_from_file(buf, &map->snake_skin.name);
+    
+    CREATE_KEY_STR_VAR(apple_tile);
+
+    CREATE_KEY_STR_VAR(snake_vertical_tile);
+    CREATE_KEY_STR_VAR(snake_horizontal_tile);
+    CREATE_KEY_STR_VAR(snake_left_up_tile);
+    CREATE_KEY_STR_VAR(snake_right_up_tile);
+    CREATE_KEY_STR_VAR(snake_left_down_tile);
+    CREATE_KEY_STR_VAR(snake_right_down_tile);
+
+    CREATE_KEY_STR_VAR(snake_tail_down_tile);
+    CREATE_KEY_STR_VAR(snake_tail_up_tile);
+    CREATE_KEY_STR_VAR(snake_tail_right_tile);
+    CREATE_KEY_STR_VAR(snake_tail_left_tile);
+
+    CREATE_KEY_STR_VAR(snake_head_down_tile);
+    CREATE_KEY_STR_VAR(snake_head_up_tile);
+    CREATE_KEY_STR_VAR(snake_head_right_tile);
+    CREATE_KEY_STR_VAR(snake_head_left_tile);
+
+
+    
+    char buf[256];
+
+    for (int i = 0; i < line_amt; ++i)
+    {
+	if (KEY_STR_COND(apple_tile))
+	{
+	    // load apple_tile
+	    snprintf(buf, 256, "%s%s%s", g_tile_dir, KEY_STR_VALUE(apple_tile), g_tile_file_extension);
+	    map->apple_tile = pixel_map_create(map->tile_width, map->tile_height);
+	    load_tile_from_file(buf, &map->apple_tile);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_vertical_tile))
+	{
+	    SNAKE_LOAD_SKIN(vertical);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_horizontal_tile))
+	{
+	    SNAKE_LOAD_SKIN(horizontal);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_left_up_tile))
+	{
+	    SNAKE_LOAD_SKIN(left_up);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_right_up_tile))
+	{
+	    SNAKE_LOAD_SKIN(right_up);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_left_down_tile))
+	{
+	    SNAKE_LOAD_SKIN(left_down);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_right_down_tile))
+	{
+	    SNAKE_LOAD_SKIN(right_down);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_tail_down_tile))
+	{
+	    SNAKE_LOAD_SKIN(tail_down);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_tail_up_tile))
+	{
+	    SNAKE_LOAD_SKIN(tail_up);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_tail_right_tile))
+	{
+	    SNAKE_LOAD_SKIN(tail_right);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_tail_left_tile))
+	{
+	    SNAKE_LOAD_SKIN(tail_left);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_head_down_tile))
+	{
+	    SNAKE_LOAD_SKIN(head_down);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_head_up_tile))
+	{
+	    SNAKE_LOAD_SKIN(head_up);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_head_right_tile))
+	{
+	    SNAKE_LOAD_SKIN(head_right);
+	    continue;
+	}
+	else if (KEY_STR_COND(snake_head_left_tile))
+	{
+	    SNAKE_LOAD_SKIN(head_left);
+	    continue;
+	}
+    }
+    
+    free(lines);
+    
+#undef SNAKE_LOAD_SKIN	
+#undef CREATE_KEY_STR_VAR
+#undef KEY_STR_COND
+#undef KEY_STR_VALUE
 }
