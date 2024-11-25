@@ -64,7 +64,7 @@ These are all the keys supported, so if you need to do something but can't find 
 | a | left |
 | d | right |
 | escape | go back |
-| space | pause |
+| space | speed up snake |
 | mousewheel | scrolling on menus |
 | left click | select / primary function |
 | right click | secondary function |
@@ -83,7 +83,8 @@ The "share" folder contains all resources that are used by the application. Insi
 
 ### Settings
 | option | value type | acceptable values (n = value) |
-| starting_speed | integer | 1 <= n|
+| --- | --- | --- |
+| starting_speed | integer | 1 <= n |
 | starting_size | integer | 1 <= n |
 
 example:
@@ -105,6 +106,7 @@ The file must end with a "[END]" directly below the collision map. See the examp
 #### Settings - for map files
 
 | option | value type | description |
+| --- | --- | --- |
 | width | int | the width of the board, unit is tiles |
 | height | int | the height of the board, unit is tiles |
 | tile_width | int | the width of each tile, the unit is pixels |
@@ -218,6 +220,7 @@ example of a 5x5 tile:
 Skin files are stored as key value pairs, where the value is a tile name.
 
 | option | description |
+| --- | --- |
 | apple_tile | the tile that apples will be drawn as |
 | snake_vertical_tile | the tile that will be displayed for the snake's body when traveling up or down |
 | snake_horizontal_tile | the tile that will be displayed for the snake's body when traveling left or right |
