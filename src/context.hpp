@@ -7,6 +7,9 @@ struct Settings
 {
     int starting_speed;
     int starting_size;
+
+    int tile_create_width;
+    int tile_create_height;
 };
 
 struct GenericCtx

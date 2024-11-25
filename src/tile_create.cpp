@@ -13,8 +13,8 @@
 TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
 {
     TileCreateCtx *ctx = (TileCreateCtx*)calloc(1, sizeof(TileCreateCtx));
-    ctx->tile_width = 10;
-    ctx->tile_height = 10;
+    ctx->tile_width = generic_ctx->settings.tile_create_width;
+    ctx->tile_height = generic_ctx->settings.tile_create_height;
     ctx->tile_size = ctx->tile_width * ctx->tile_height;
     ctx->tile = (RGBPixel*)calloc(ctx->tile_size, sizeof(RGBPixel));
 

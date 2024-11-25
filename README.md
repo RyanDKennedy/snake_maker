@@ -82,15 +82,18 @@ The "share" folder contains all resources that are used by the application. Insi
 **You can edit where these are looked for by editing src/common.hpp then recompiling the project**
 
 ### Settings
-| option | value type | acceptable values (n = value) |
-| --- | --- | --- |
-| starting_speed | integer | 1 <= n |
-| starting_size | integer | 1 <= n |
-
+| option | value type | acceptable values (n = value) | description |
+| --- | --- | --- | --- |
+| starting_speed | integer | 1 <= n | the amount of blocks the snake moves per second |
+| starting_size | integer | 1 <= n | the size of the body (not including head) that the snake starts with |
+| tile_create_width | integer | 1 <= n | the width of the tile in the create tile menu |
+| tile_create_height | integer | 1 <= n| the height of the tile in the create tile menu |
 example:
 ```
 starting_speed=10
 starting_size=1
+tile_create_width=10
+tile_create_height=10
 ```
 
 ### Maps (.snake)

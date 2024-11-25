@@ -9,17 +9,21 @@
 
 #define STARTING_SPEED_INDEX 0
 #define STARTING_SIZE_INDEX 1
+#define TILE_CREATE_WIDTH_INDEX 2
+#define TILE_CREATE_HEIGHT_INDEX 3
 
 SettingsCtx* settings_start(GenericCtx *generic_ctx)
 {
     SettingsCtx *ctx = (SettingsCtx*)calloc(1, sizeof(SettingsCtx));
     ctx->in_prog_settings = generic_ctx->settings;
 
-    ctx->values_amt = 2;
+    ctx->values_amt = 4;
     ctx->values = (IncrementValue*)calloc(ctx->values_amt, sizeof(IncrementValue));
 
     IncrementValue *starting_speed = &ctx->values[STARTING_SPEED_INDEX];
     IncrementValue *starting_size = &ctx->values[STARTING_SIZE_INDEX];
+    IncrementValue *tile_create_width = &ctx->values[TILE_CREATE_WIDTH_INDEX];
+    IncrementValue *tile_create_height = &ctx->values[TILE_CREATE_HEIGHT_INDEX];
 
     *starting_speed = create_increment_value(generic_ctx->settings.starting_speed, "starting_speed", Vec2i{200, 500}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
     starting_speed->has_bottom_limit = true;
@@ -28,6 +32,14 @@ SettingsCtx* settings_start(GenericCtx *generic_ctx)
     *starting_size = create_increment_value(generic_ctx->settings.starting_size, "starting_size", Vec2i{200, 450}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
     starting_size->has_bottom_limit = true;
     starting_size->bottom_limit = 1;
+
+    *tile_create_width = create_increment_value(generic_ctx->settings.tile_create_width, "tile_create_width", Vec2i{200, 400}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
+    tile_create_width->has_bottom_limit = true;
+    tile_create_width->bottom_limit = 1;
+
+    *tile_create_height = create_increment_value(generic_ctx->settings.tile_create_height, "tile_create_height", Vec2i{200, 350}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
+    tile_create_height->has_bottom_limit = true;
+    tile_create_height->bottom_limit = 1;
 
     return ctx;
 }
@@ -57,6 +69,8 @@ GameReturnCode settings_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Settin
     // Load values into temporary settings
     settings_ctx->in_prog_settings.starting_speed = settings_ctx->values[STARTING_SPEED_INDEX].value;
     settings_ctx->in_prog_settings.starting_size = settings_ctx->values[STARTING_SIZE_INDEX].value;
+    settings_ctx->in_prog_settings.tile_create_width = settings_ctx->values[TILE_CREATE_WIDTH_INDEX].value;
+    settings_ctx->in_prog_settings.tile_create_height = settings_ctx->values[TILE_CREATE_HEIGHT_INDEX].value;
 
     return return_code;
 }
@@ -123,6 +137,8 @@ Settings settings_from_file(const char *path)
     
     CREATE_KEY_STR_VAR(starting_speed);
     CREATE_KEY_STR_VAR(starting_size);
+    CREATE_KEY_STR_VAR(tile_create_width);
+    CREATE_KEY_STR_VAR(tile_create_height);
 
     for (int i = 0; i < line_amt; ++i)
     {
@@ -134,6 +150,15 @@ Settings settings_from_file(const char *path)
 	{
 	    settings.starting_size = atoi(KEY_STR_VALUE(starting_size));
 	}
+	else if (KEY_STR_COND(tile_create_width))
+	{
+	    settings.tile_create_width = atoi(KEY_STR_VALUE(tile_create_width));
+	}
+	else if (KEY_STR_COND(tile_create_height))
+	{
+	    settings.tile_create_height = atoi(KEY_STR_VALUE(tile_create_height));
+	}
+
     }
 #undef CREATE_KEY_STR_VAR
 #undef KEY_STR_COND
@@ -167,6 +192,8 @@ void settings_write_to_file(const char *path, Settings *settings)
 
     WRITE_FIELD_TO_FILE(starting_speed, "%d");
     WRITE_FIELD_TO_FILE(starting_size, "%d");
+    WRITE_FIELD_TO_FILE(tile_create_width, "%d");
+    WRITE_FIELD_TO_FILE(tile_create_height, "%d");
 
 #undef WRITE_FIELD_TO_FILE
 

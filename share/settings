@@ -1,2 +1,4 @@
-starting_speed=10
+starting_speed=5
 starting_size=20
+tile_create_width=20
+tile_create_height=20
