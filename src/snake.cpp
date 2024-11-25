@@ -16,12 +16,7 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
     strcpy(snake_ctx->map_path, g_map_dir);
     strcat(snake_ctx->map_path, map_name);
     strcat(snake_ctx->map_path, g_map_file_extension);
-
-    printf("before creating map\n");
-
     snake_ctx->map = snake_map_create(snake_ctx->map_path);
-
-    printf("created map\n");
 
     SnakeSegment head;
     head.pos[0] = snake_ctx->map->starting_pos[0];
