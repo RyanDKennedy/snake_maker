@@ -22,7 +22,7 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
     head.pos[0] = snake_ctx->map->starting_pos[0];
     head.pos[1] = snake_ctx->map->starting_pos[1];
     snake_ctx->snake.push_front(head);
-    snake_ctx->time_since_last_move = 0.0f;
+
     switch (snake_ctx->map->starting_direction)
     {
 	case 0:
@@ -46,11 +46,15 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
     snake_ctx->apples = (Vec2i*)calloc(snake_ctx->apples_amt, sizeof(Vec2i));
     for (int i = 0; i < snake_ctx->apples_amt; ++i)
     {
-	snake_ctx->apples[i][0] = -1;
-	snake_ctx->apples[i][1] = -1;
+	do
+	{
+	    snake_ctx->apples[i][0] = rand() % snake_ctx->map->width;
+	    snake_ctx->apples[i][1] = rand() % snake_ctx->map->width;
+	} while (snake_ctx->map->collision_map[snake_ctx->apples[i][0] + snake_ctx->apples[i][1] * snake_ctx->map->width] != 0);
     }
 
     snake_ctx->speed = 1.0 / generic_ctx->settings.starting_speed;
+    snake_ctx->time_since_last_move = 0;
 
     return snake_ctx;
 }
@@ -107,7 +111,7 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 
     // Update snake
     snake_ctx->time_since_last_move += generic_ctx->delta_time;
-    while (snake_ctx->time_since_last_move > speed)
+    while (snake_ctx->time_since_last_move >= speed)
     {
 	snake_ctx->time_since_last_move -= speed;
 
