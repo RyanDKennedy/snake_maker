@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <string>
 
-SnakeMap* snake_map_create(const char *path)
+SnakeMap* snake_map_create(const char *path, bool texture_filtering)
 {
     // Create map
     SnakeMap *map = (SnakeMap*)calloc(1, sizeof(SnakeMap));
@@ -230,13 +230,78 @@ SnakeMap* snake_map_create(const char *path)
     map->board_pixel_map = pixel_map_create(map->width * map->tile_width, map->height * map->tile_height);
     draw_snake_map(&map->board_pixel_map, map);
 
+    // Cleanup file parsing stuff
     free(lines);
+
+
+    // OpenGL Stuff
+
+    int min_filter = (texture_filtering)? GL_LINEAR : GL_NEAREST;
+    int mag_filter = (texture_filtering)? GL_LINEAR : GL_NEAREST;
+    float border_color[] = {0.0, 0.0, 0.0, 0.0};
+
+    // Create texture for map
+    glGenTextures(1, &map->texture);
+    glBindTexture(GL_TEXTURE_2D, map->texture);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, map->board_pixel_map.width, map->board_pixel_map.height, 0, GL_RGB, GL_UNSIGNED_BYTE, map->board_pixel_map.data);
+    map->aspect_ratio = (float)map->board_pixel_map.width / map->board_pixel_map.height;
+
+    // Create texture for skin
+#define CREATE_TEXTURE_FOR_SKIN(name)\
+    glGenTextures(1, &map->skin_textures.name);\
+    glBindTexture(GL_TEXTURE_2D, map->skin_textures.name);\
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);\
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, map->skin.name.width, map->skin.name.height, 0, GL_RGB, GL_UNSIGNED_BYTE, map->skin.name.data);
+
+    CREATE_TEXTURE_FOR_SKIN(apple_tile);
+    CREATE_TEXTURE_FOR_SKIN(vertical);
+    CREATE_TEXTURE_FOR_SKIN(horizontal);
+    CREATE_TEXTURE_FOR_SKIN(left_up);
+    CREATE_TEXTURE_FOR_SKIN(right_up);
+    CREATE_TEXTURE_FOR_SKIN(left_down);
+    CREATE_TEXTURE_FOR_SKIN(right_down);
+    CREATE_TEXTURE_FOR_SKIN(tail_down);
+    CREATE_TEXTURE_FOR_SKIN(tail_up);
+    CREATE_TEXTURE_FOR_SKIN(tail_left);
+    CREATE_TEXTURE_FOR_SKIN(tail_right);
+    CREATE_TEXTURE_FOR_SKIN(head_down);
+    CREATE_TEXTURE_FOR_SKIN(head_up);
+    CREATE_TEXTURE_FOR_SKIN(head_left);
+    CREATE_TEXTURE_FOR_SKIN(head_right);
+
+#undef CREATE_TEXTURE_FOR_SKIN
 
     return map;
 }
 
 void snake_map_destroy(SnakeMap *map)
 {
+    glDeleteTextures(1, &map->skin_textures.apple_tile);
+    glDeleteTextures(1, &map->skin_textures.vertical);
+    glDeleteTextures(1, &map->skin_textures.horizontal);
+    glDeleteTextures(1, &map->skin_textures.left_up);
+    glDeleteTextures(1, &map->skin_textures.right_up);
+    glDeleteTextures(1, &map->skin_textures.left_down);
+    glDeleteTextures(1, &map->skin_textures.right_down);
+    glDeleteTextures(1, &map->skin_textures.tail_down);
+    glDeleteTextures(1, &map->skin_textures.tail_up);
+    glDeleteTextures(1, &map->skin_textures.tail_left);
+    glDeleteTextures(1, &map->skin_textures.tail_right);
+    glDeleteTextures(1, &map->skin_textures.head_down);
+    glDeleteTextures(1, &map->skin_textures.head_up);
+    glDeleteTextures(1, &map->skin_textures.head_left);
+    glDeleteTextures(1, &map->skin_textures.head_right);
+    glDeleteTextures(1, &map->texture);
+
     for (int i = 0; i < map->tiles_amt; ++i)
     {
 	pixel_map_destroy(&map->tile_maps[i]);
@@ -247,15 +312,22 @@ void snake_map_destroy(SnakeMap *map)
     free(map->collision_map);
 
     pixel_map_destroy(&map->board_pixel_map);
-
     pixel_map_destroy(&map->skin.apple_tile);
-
     pixel_map_destroy(&map->skin.horizontal);
     pixel_map_destroy(&map->skin.vertical);
     pixel_map_destroy(&map->skin.left_up);
     pixel_map_destroy(&map->skin.right_up);
     pixel_map_destroy(&map->skin.left_down);
     pixel_map_destroy(&map->skin.right_down);
+    pixel_map_destroy(&map->skin.head_down);
+    pixel_map_destroy(&map->skin.head_up);
+    pixel_map_destroy(&map->skin.head_left);
+    pixel_map_destroy(&map->skin.head_right);
+    pixel_map_destroy(&map->skin.tail_down);
+    pixel_map_destroy(&map->skin.tail_up);
+    pixel_map_destroy(&map->skin.tail_left);
+    pixel_map_destroy(&map->skin.tail_right);
+
 
     free(map);
 }

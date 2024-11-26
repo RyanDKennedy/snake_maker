@@ -5,6 +5,7 @@
 #include "math_types.hpp"
 #include "utils.hpp"
 #include "drawing.hpp"
+#include "quad.hpp"
 
 struct SnakeMap
 {
@@ -24,7 +25,29 @@ struct SnakeMap
     Vec2i starting_pos;
     int starting_direction; // 0 = up, 1 = right, 2 = down, 3 = left
 
+    GLuint texture;
+    float aspect_ratio;
 
+    struct
+    {
+	GLuint apple_tile;
+	GLuint vertical;
+	GLuint horizontal;	
+	GLuint left_up;	
+	GLuint right_up;
+	GLuint left_down;	
+	GLuint right_down;
+
+	GLuint tail_down;
+	GLuint tail_up;
+	GLuint tail_left;
+	GLuint tail_right;
+
+	GLuint head_down;
+	GLuint head_up;
+	GLuint head_left;
+	GLuint head_right;	
+    } skin_textures;
 
     struct
     {
@@ -48,7 +71,7 @@ struct SnakeMap
     } skin;
 };
 
-SnakeMap* snake_map_create(const char *path);
+SnakeMap* snake_map_create(const char *path, bool texture_filtering);
 void snake_map_destroy(SnakeMap *map);
 
 int load_tile_from_file(const char *path, PixelMap *target_map);

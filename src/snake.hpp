@@ -41,8 +41,6 @@ struct SnakeCtx
     int apples_amt;
     Vec2i *apples;
 
-    float map_aspect_ratio;
-
     Quad map_quad;
     Shader quad_shader;
     GLuint map_texture;
@@ -50,27 +48,6 @@ struct SnakeCtx
     Quad tile_quad;
     int tile_width;
     int tile_height;
-
-    struct
-    {
-	GLuint apple_tile;
-	GLuint vertical;
-	GLuint horizontal;	
-	GLuint left_up;	
-	GLuint right_up;
-	GLuint left_down;	
-	GLuint right_down;
-
-	GLuint tail_down;
-	GLuint tail_up;
-	GLuint tail_left;
-	GLuint tail_right;
-
-	GLuint head_down;
-	GLuint head_up;
-	GLuint head_left;
-	GLuint head_right;	
-    } skin_textures;
 
     SnakeCtx();
 

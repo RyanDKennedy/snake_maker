@@ -12,14 +12,12 @@
 
 #include "common.hpp"
 #include "drawing.hpp"
-#include "glm/ext/matrix_transform.hpp"
 #include "shader.hpp"
 #include "quad.hpp"
 #include "pixel.hpp"
 #include "pixel_map.hpp"
 #include "custom_fonts.hpp"
 #include "game_state.hpp"
-#include "collisions.hpp"
 #include "button.hpp"
 #include "context.hpp"
 #include "menu.hpp"
@@ -107,9 +105,9 @@ int main(void)
     generic_context.mouse_released = false;
     generic_context.mouse_right_clicked = false;
     
+    // Create vp matrix. (0, 0) is bottom left corner, and (800, 800) is top right corner
     glm::mat4 proj = glm::ortho(0.0f, 800.f, 0.0f, 800.f, 0.1f, 100.f);
     generic_context.vp_matrix = proj;
-
 
 
     // Initialize specific_context
@@ -143,9 +141,10 @@ int main(void)
 	    generic_context.mouse_pos[1] = (int)ypos;
 	}	
 	{
+	    generic_context.mouse_right_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+
 	    bool old_clicked = generic_context.mouse_clicked;
 	    generic_context.mouse_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
-	    generic_context.mouse_right_clicked = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
 	    if (old_clicked == true && generic_context.mouse_clicked == false)
 	    {
 		generic_context.mouse_released = true;
@@ -334,11 +333,13 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
+    // For last pressed key
     if (action == GLFW_PRESS)
     {
 	key_last_pressed = key;
     }
-
+    
+    // For typing input (key_list global variable)
     if (action != GLFW_RELEASE)
     {
 	
