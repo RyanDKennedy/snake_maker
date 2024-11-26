@@ -3,7 +3,6 @@
 ## About
 
 Snake Maker is the classic game snake, except you can build your own maps.
-Snake Maker runs in an 800 pixel by 800 pixel resolution.
 Inspired by nsnake the terminal game.
 
 ## Installing
@@ -73,7 +72,7 @@ These are all the keys supported, so if you need to do something but can't find 
 Please just use the built in map creator. The format for the maps are specified below in the Maps section.
 
 ## Custom Tiles
-Please just use the built in tile creator. They are stored as a grid of RGB values, however the format is a little bit sensitive, make sure you have no trailing newlines. The format is specified below int he Tiles section.
+Please just use the built in tile creator. They are stored as a grid of RGBA values, however the format is a little bit sensitive, make sure you have no trailing newlines. The format is specified below int he Tiles section.
 
 ## Share Directory Structure
 
@@ -115,8 +114,8 @@ The file must end with a "[END]" directly below the collision map. See the examp
 | --- | --- | --- |
 | width | int | the width of the board, unit is tiles |
 | height | int | the height of the board, unit is tiles |
-| tile_width | int | the width of each tile, the unit is pixels |
-| tile_height | int | the height of each tile, the unit is pixels |
+| tile_width | int | the width of each tile, the unit is pixels >= 16 |
+| tile_height | int | the height of each tile, the unit is pixels >= 16 |
 | starting_x | int | the x value of the position where the player will start, positions start at (0,0) |
 | starting_y | int | the y value of the position where the player will start, positions start at (0,0) |
 | starting_direction | int | the direction the player is facing when the first start the map. 0 = up, 1 = right, 2 = down, 3 = left |
@@ -129,8 +128,8 @@ example:
 [Settings]
 width=60
 height=60
-tile_width=10	
-tile_height=10
+tile_width=16	
+tile_height=16
 starting_x=5
 starting_y=9
 starting_direction=0
@@ -209,18 +208,18 @@ solid=1
 ```
 
 ### Tiles
-Tiles are just a grid of rgb values. The format is really sensitive, so make sure you have no trailing newlines in the file. If the example.tile is 10 tall make sure that ```cat example.tile | wc -l``` returns 9.
+Tiles are just a grid of rgba values. The format is really sensitive, so make sure you have no trailing newlines in the file. If the example.tile is 10 tall make sure that ```cat example.tile | wc -l``` returns 9.
 NOTE: the rows end with a comma unlike how they did inside of the maps inside of the .snake files.
 
 example of a 5x5 tile:
 ```
-(255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255),
-(255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255),
-(255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255),
-(255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255),
-(255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255), (255, 255, 255),
+(255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255),
+(255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255),
+(255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255),
+(255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255),
+(255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255),
 ```
-(255, 255, 255) corresponds to RGB values, so this would be the color white.
+(255, 255, 255, 255) corresponds to RGBA values, so this would be the solid color white.
 
 ### Skins
 Skin files are stored as key value pairs, where the value is a tile name.
