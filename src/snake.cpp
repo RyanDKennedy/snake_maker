@@ -9,15 +9,94 @@
 #include <cstdio>
 #include <string>
 
+#include <glm/gtc/type_ptr.hpp>
+#include <stb_image.h>
+
+SnakeCtx::SnakeCtx() : quad_shader(g_shader_vertex_code, g_shader_fragment_code)
+{
+
+}
+
 SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
 {
     // use raii here so that the std::queue gets it's constructor called
     SnakeCtx *snake_ctx = new SnakeCtx;
+
+    // Create the map pixmap
     strcpy(snake_ctx->map_path, g_map_dir);
     strcat(snake_ctx->map_path, map_name);
     strcat(snake_ctx->map_path, g_map_file_extension);
     snake_ctx->map = snake_map_create(snake_ctx->map_path);
 
+    // Create the map texture
+    int min_filter = (generic_ctx->settings.texture_filtering == 1)? GL_LINEAR : GL_NEAREST;
+    int mag_filter = (generic_ctx->settings.texture_filtering == 1)? GL_LINEAR : GL_NEAREST;
+    float border_color[] = {0.0, 0.0, 0.0, 0.0};
+    glGenTextures(1, &snake_ctx->map_texture);
+    glBindTexture(GL_TEXTURE_2D, snake_ctx->map_texture);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, snake_ctx->map->board_pixel_map.width, snake_ctx->map->board_pixel_map.height, 0, GL_RGB, GL_UNSIGNED_BYTE, snake_ctx->map->board_pixel_map.data);
+    snake_ctx->map_aspect_ratio = (float)snake_ctx->map->board_pixel_map.width / snake_ctx->map->board_pixel_map.height;
+
+    // Configure maps model matrix
+    if (snake_ctx->map_aspect_ratio > 1)
+    {
+	float width = generic_ctx->pix_width * 0.75;
+	float height = width / snake_ctx->map_aspect_ratio;
+
+	snake_ctx->map_quad.scale(width, height);
+	snake_ctx->map_quad.translate((generic_ctx->pix_width - width) / 2, (generic_ctx->pix_height - height) / 2, -9.f);
+    }
+    else
+    {
+	float height = generic_ctx->pix_height * 0.75;
+	float width = height * snake_ctx->map_aspect_ratio;
+
+	snake_ctx->map_quad.scale(width, height);
+	snake_ctx->map_quad.translate((generic_ctx->pix_width - width) / 2, (generic_ctx->pix_height - height) / 2, -9.f);
+    }
+    snake_ctx->map_quad.update_model();	
+
+    // Create tile textures
+    snake_ctx->tile_width = snake_ctx->map_quad.m_scale[0] / snake_ctx->map->width;
+    snake_ctx->tile_height = snake_ctx->map_quad.m_scale[1] / snake_ctx->map->height;
+    snake_ctx->tile_quad.scale(snake_ctx->tile_width, snake_ctx->tile_height);
+
+#define CREATE_TEXTURE_FOR_SKIN(name)\
+    glGenTextures(1, &snake_ctx->skin_textures.name);\
+    glBindTexture(GL_TEXTURE_2D, snake_ctx->skin_textures.name);\
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);\
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, snake_ctx->map->tile_width, snake_ctx->map->tile_height, 0, GL_RGB, GL_UNSIGNED_BYTE, snake_ctx->map->skin.name.data);
+
+
+    CREATE_TEXTURE_FOR_SKIN(apple_tile);
+    CREATE_TEXTURE_FOR_SKIN(vertical);
+    CREATE_TEXTURE_FOR_SKIN(horizontal);
+    CREATE_TEXTURE_FOR_SKIN(left_up);
+    CREATE_TEXTURE_FOR_SKIN(right_up);
+    CREATE_TEXTURE_FOR_SKIN(left_down);
+    CREATE_TEXTURE_FOR_SKIN(right_down);
+    CREATE_TEXTURE_FOR_SKIN(tail_down);
+    CREATE_TEXTURE_FOR_SKIN(tail_up);
+    CREATE_TEXTURE_FOR_SKIN(tail_left);
+    CREATE_TEXTURE_FOR_SKIN(tail_right);
+    CREATE_TEXTURE_FOR_SKIN(head_down);
+    CREATE_TEXTURE_FOR_SKIN(head_up);
+    CREATE_TEXTURE_FOR_SKIN(head_left);
+    CREATE_TEXTURE_FOR_SKIN(head_right);
+
+#undef CREATE_TEXTURE_FOR_SKIN
+
+
+    // Snake initialization
     SnakeSegment head;
     head.pos[0] = snake_ctx->map->starting_pos[0];
     head.pos[1] = snake_ctx->map->starting_pos[1];
@@ -39,9 +118,12 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
 	    break;
     }
     snake_ctx->snake_dir_old = snake_ctx->snake_dir;
-
     snake_ctx->add_segments = generic_ctx->settings.starting_size;
+    snake_ctx->speed = 1.0 / generic_ctx->settings.starting_speed;
+    snake_ctx->time_since_last_move = 0;
 
+
+    // Apple initialization
     snake_ctx->apples_amt = 2;
     snake_ctx->apples = (Vec2i*)calloc(snake_ctx->apples_amt, sizeof(Vec2i));
     for (int i = 0; i < snake_ctx->apples_amt; ++i)
@@ -53,9 +135,6 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
 	} while (snake_ctx->map->collision_map[snake_ctx->apples[i][0] + snake_ctx->apples[i][1] * snake_ctx->map->width] != 0);
     }
 
-    snake_ctx->speed = 1.0 / generic_ctx->settings.starting_speed;
-    snake_ctx->time_since_last_move = 0;
-
     return snake_ctx;
 }
 
@@ -63,21 +142,19 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 {
     GameReturnCode return_code = GameReturnCode::none;
 
-    const int border_size = 15;
-
     Vec2i map_pos;
-    map_pos[0] = pixel_map->width / 2 - (snake_ctx->map->width * snake_ctx->map->tile_width) / 2;
-    map_pos[1] = pixel_map->height / 2 - (snake_ctx->map->height * snake_ctx->map->tile_height) / 2;
+    map_pos[0] = snake_ctx->map_quad.m_position[0];
+    map_pos[1] = snake_ctx->map_quad.m_position[1];
 
-    Vec2i border_pos;
-    border_pos[0] = map_pos[0] - border_size;
-    border_pos[1] = map_pos[1] - border_size;
-
-    // Draw outline
-    draw_rectangle(pixel_map, (snake_ctx->map->width * snake_ctx->map->tile_width) + 2*border_size, (snake_ctx->map->height * snake_ctx->map->tile_height) + 2*border_size, border_pos, Vec3i{50, 50, 50});
-    
     // Draw map
-    draw_pixmap(pixel_map, &snake_ctx->map->board_pixel_map, map_pos);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, snake_ctx->map_texture);
+    snake_ctx->quad_shader.use();
+    glUniform1i(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_tex"), 0);
+    snake_ctx->map_quad.update_model();
+    glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(snake_ctx->map_quad.m_model_matrix));
+    glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_ctx->vp_matrix));
+    snake_ctx->map_quad.draw();
 
     // Parse Input
     switch (generic_ctx->last_pressed_key)
@@ -101,19 +178,16 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 	default:
 	    break;
     }
-
-    float speed = snake_ctx->speed;
     if (generic_ctx->keyboard.space)
     {
-	speed /= 2;
+	generic_ctx->delta_time *= 2;
     }
-
 
     // Update snake
     snake_ctx->time_since_last_move += generic_ctx->delta_time;
-    while (snake_ctx->time_since_last_move >= speed)
+    while (snake_ctx->time_since_last_move >= snake_ctx->speed)
     {
-	snake_ctx->time_since_last_move -= speed;
+	snake_ctx->time_since_last_move -= snake_ctx->speed;
 
 	snake_ctx->snake_dir_old = snake_ctx->snake_dir;
 
@@ -210,33 +284,63 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
     }
 
     // Draw Apples
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, snake_ctx->skin_textures.apple_tile);
+    snake_ctx->quad_shader.use();
+    glUniform1i(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_tex"), 0);
+    glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_ctx->vp_matrix));
+
     for (int i = 0; i < snake_ctx->apples_amt; ++i)
     {
-	draw_pixmap(pixel_map, &snake_ctx->map->apple_tile, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->apples[i][0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->apples[i][1]});
-//	draw_rectangle(pixel_map, snake_ctx->map->tile_width, snake_ctx->map->tile_height, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->apples[i][0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->apples[i][1]}, Vec3i{255, 0, 0});
+	snake_ctx->tile_quad.m_position[0] = 0;
+	snake_ctx->tile_quad.m_position[1] = 0;
+	snake_ctx->tile_quad.m_position[2] = -8.f;
+	snake_ctx->tile_quad.translate(map_pos[0] + snake_ctx->tile_width * snake_ctx->apples[i][0], map_pos[1] + snake_ctx->tile_height * snake_ctx->apples[i][1], 0.f);
+	snake_ctx->tile_quad.update_model();
+
+	glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(snake_ctx->tile_quad.m_model_matrix));
+
+	snake_ctx->tile_quad.draw();
     }
 
     // Draw snake
     {
-	PixelMap *pix_map;
+	GLuint texture;
+
 
 	switch (snake_ctx->snake_dir_old)
 	{
 	    case SnakeDir::up:
-		pix_map = &snake_ctx->map->snake_skin.head_up;
+		texture = snake_ctx->skin_textures.head_up;
 		break;
 	    case SnakeDir::down:
-		pix_map = &snake_ctx->map->snake_skin.head_down;
+		texture = snake_ctx->skin_textures.head_down;
 		break;
 	    case SnakeDir::left:
-		pix_map = &snake_ctx->map->snake_skin.head_left;
+		texture = snake_ctx->skin_textures.head_left;
 		break;
 	    case SnakeDir::right:
-		pix_map = &snake_ctx->map->snake_skin.head_right;
+		texture = snake_ctx->skin_textures.head_right;
 		break;
 	}
 
-	draw_pixmap(pixel_map, pix_map, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake.front().pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake.front().pos[1]});
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	snake_ctx->quad_shader.use();
+	glUniform1i(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_tex"), 0);
+	glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_ctx->vp_matrix));
+	
+	snake_ctx->tile_quad.m_position[0] = 0;
+	snake_ctx->tile_quad.m_position[1] = 0;
+	snake_ctx->tile_quad.m_position[2] = -7.0f;
+	snake_ctx->tile_quad.translate(map_pos[0] + snake_ctx->tile_width * snake_ctx->snake.front().pos[0], map_pos[1] + snake_ctx->tile_height * snake_ctx->snake.front().pos[1], 0.f);
+	snake_ctx->tile_quad.update_model();
+	glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(snake_ctx->tile_quad.m_model_matrix));
+	snake_ctx->tile_quad.draw();
+
+
+	glUniform1i(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_tex"), 0);
+	glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_ctx->vp_matrix));
 
 	for (int i = 1; i < snake_ctx->snake.size() - 1; ++i)
 	{
@@ -256,46 +360,65 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 	    
 	    if (dx == 0 && dy != 0)
 	    {
-		pix_map = &snake_ctx->map->snake_skin.vertical;
+		texture = snake_ctx->skin_textures.vertical;
 	    }
 	    else if (dy == 0 && dx != 0)
 	    {
-		pix_map = &snake_ctx->map->snake_skin.horizontal;
+		texture = snake_ctx->skin_textures.horizontal;
 	    }
 	    else if (dx == dy && pos1[1] != snake_ctx->snake[i].pos[1])
 	    {
-		pix_map = &snake_ctx->map->snake_skin.right_down;
+		texture = snake_ctx->skin_textures.right_down;
 	    }
 	    else if (dx == -dy && pos1[1] != snake_ctx->snake[i].pos[1])
 	    {
-		pix_map = &snake_ctx->map->snake_skin.right_up;
+		texture = snake_ctx->skin_textures.right_up;
 	    }
 	    else if (dx == dy && pos1[1] == snake_ctx->snake[i].pos[1])
 	    {
-		pix_map = &snake_ctx->map->snake_skin.left_up;
+		texture = snake_ctx->skin_textures.left_up;
 	    }
 	    else if (dx == -dy && pos1[1] == snake_ctx->snake[i].pos[1])
 	    {
-		pix_map = &snake_ctx->map->snake_skin.left_down;
+		texture = snake_ctx->skin_textures.left_down;
 	    }
 
-	    draw_pixmap(pixel_map, pix_map, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake[i].pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake[i].pos[1]});
+	    glBindTexture(GL_TEXTURE_2D, texture);
+	    snake_ctx->tile_quad.m_position[0] = 0;
+	    snake_ctx->tile_quad.m_position[1] = 0;
+	    snake_ctx->tile_quad.m_position[2] = -7.f;
+	    snake_ctx->tile_quad.translate(map_pos[0] + snake_ctx->tile_width * snake_ctx->snake[i].pos[0], map_pos[1] + snake_ctx->tile_height * snake_ctx->snake[i].pos[1], 0.f);
+	    snake_ctx->tile_quad.update_model();
+
+	    glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(snake_ctx->tile_quad.m_model_matrix));
+	    snake_ctx->tile_quad.draw();
+
 	}
+	
 	int dx = snake_ctx->snake[snake_ctx->snake.size() - 2].pos[0] - snake_ctx->snake.back().pos[0];
 	int dy = snake_ctx->snake[snake_ctx->snake.size() - 2].pos[1] - snake_ctx->snake.back().pos[1];
 	if (dx == 1)
-	    pix_map = &snake_ctx->map->snake_skin.tail_right;
+	    texture = snake_ctx->skin_textures.tail_right;
 	else if (dx == -1)
-	    pix_map = &snake_ctx->map->snake_skin.tail_left;
+	    texture = snake_ctx->skin_textures.tail_left;
 	else if (dy == 1)
-	    pix_map = &snake_ctx->map->snake_skin.tail_up;
+	    texture = snake_ctx->skin_textures.tail_up;
 	else if (dy == -1)
-	    pix_map = &snake_ctx->map->snake_skin.tail_down;
+	    texture = snake_ctx->skin_textures.tail_down;
 
-	draw_pixmap(pixel_map, pix_map, Vec2i{map_pos[0] + snake_ctx->map->tile_width * snake_ctx->snake.back().pos[0], map_pos[1] + snake_ctx->map->tile_height * snake_ctx->snake.back().pos[1]});
+	glBindTexture(GL_TEXTURE_2D, texture);
+	snake_ctx->tile_quad.m_position[0] = 0;
+	snake_ctx->tile_quad.m_position[1] = 0;
+	snake_ctx->tile_quad.m_position[2] = -7.f;
+	snake_ctx->tile_quad.translate(map_pos[0] + snake_ctx->tile_width * snake_ctx->snake.back().pos[0], map_pos[1] + snake_ctx->tile_height * snake_ctx->snake.back().pos[1], 0.f);
+	snake_ctx->tile_quad.update_model();
+
+	glUniform1i(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_tex"), 0);
+	glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_ctx->vp_matrix));
+	glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(snake_ctx->tile_quad.m_model_matrix));
+	snake_ctx->tile_quad.draw();
     }
     
-
     if (generic_ctx->keyboard.escape)
     {
 	return_code = GameReturnCode::goto_menu;
@@ -306,6 +429,24 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 
 void snake_end(SnakeCtx *snake_ctx)
 {
+    glDeleteTextures(1, &snake_ctx->skin_textures.apple_tile);
+    glDeleteTextures(1, &snake_ctx->skin_textures.vertical);
+    glDeleteTextures(1, &snake_ctx->skin_textures.horizontal);
+    glDeleteTextures(1, &snake_ctx->skin_textures.left_up);
+    glDeleteTextures(1, &snake_ctx->skin_textures.right_up);
+    glDeleteTextures(1, &snake_ctx->skin_textures.left_down);
+    glDeleteTextures(1, &snake_ctx->skin_textures.right_down);
+    glDeleteTextures(1, &snake_ctx->skin_textures.tail_down);
+    glDeleteTextures(1, &snake_ctx->skin_textures.tail_up);
+    glDeleteTextures(1, &snake_ctx->skin_textures.tail_left);
+    glDeleteTextures(1, &snake_ctx->skin_textures.tail_right);
+    glDeleteTextures(1, &snake_ctx->skin_textures.head_down);
+    glDeleteTextures(1, &snake_ctx->skin_textures.head_up);
+    glDeleteTextures(1, &snake_ctx->skin_textures.head_left);
+    glDeleteTextures(1, &snake_ctx->skin_textures.head_right);
+
+    glDeleteTextures(1, &snake_ctx->map_texture);
+
     snake_map_destroy(snake_ctx->map);
     free(snake_ctx->apples);
     delete snake_ctx;

@@ -15,8 +15,6 @@ struct SnakeMap
 
     int tile_width;
     int tile_height;
-//    static const int tile_width = 10;
-//    static const int tile_height = 10;
 
     int *collision_map;
     int *board_map; // this is a map of indices to tile_maps array
@@ -26,10 +24,11 @@ struct SnakeMap
     Vec2i starting_pos;
     int starting_direction; // 0 = up, 1 = right, 2 = down, 3 = left
 
-    PixelMap apple_tile;
+
 
     struct
     {
+	PixelMap apple_tile;
 	PixelMap vertical;
 	PixelMap horizontal;	
 	PixelMap left_up;	
@@ -46,7 +45,7 @@ struct SnakeMap
 	PixelMap head_up;
 	PixelMap head_left;
 	PixelMap head_right;	
-    } snake_skin;
+    } skin;
 };
 
 SnakeMap* snake_map_create(const char *path);

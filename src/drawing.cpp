@@ -52,14 +52,14 @@ void draw_letter(PixelMap *pixel_map, char letter, int font_size, int font_mag, 
 	font_bitmap = g_eightbitfont[' '];
     }
 
-    for (int h = font_size-1; h >= 0; h--)
+    for (int h = 0; h < font_size; ++h)
     {
 	for (int w = 0; w < font_size; ++w)
 	{
 	    if (font_bitmap[h * font_size + w] == '1')
 	    {
 		int base = pos[0] + pos[1] * pixel_map->width;
-		const int index = (font_size - h) * pixel_map->width + w + base;
+		const int index = h * pixel_map->width + w + base;
 		pixel_map->data[index].r = color[0];
 		pixel_map->data[index].g = color[1];
 		pixel_map->data[index].b = color[2];
@@ -120,20 +120,20 @@ void draw_letter_partial(PixelMap *pixel_map, char letter, int font_size, int fo
 	font_bitmap = g_eightbitfont[' '];
     }
 
-    for (int h = font_size-1; h >= 0; h--)
+    for (int h = 0; h < font_size; ++h)
     {
 	for (int w = 0; w < font_size; ++w)
 	{
 	    if (font_bitmap[h * font_size + w] == '1')
 	    {
 		const int x = pos[0] + w;
-		const int y = (font_size - h) + pos[1];
+		const int y = h + pos[1];
 		if (x < col_box.bottom_left[0] || x > col_box.top_right[0] ||
 		    y < col_box.bottom_left[1] || y > col_box.top_right[1])
 		    continue;
 		
 		int base = pos[0] + pos[1] * pixel_map->width;
-		const int index = (font_size - h) * pixel_map->width + w + base;
+		const int index = h * pixel_map->width + w + base;
 		pixel_map->data[index].r = color[0];
 		pixel_map->data[index].g = color[1];
 		pixel_map->data[index].b = color[2];

@@ -183,6 +183,7 @@ SnakeMap* snake_map_create(const char *path)
 
     }
 
+
     // Create the tile maps
     map->tiles_amt = board_map_index - tile_definitions_index - 1;
     map->tile_maps = (PixelMap*)calloc(map->tiles_amt, sizeof(PixelMap));
@@ -247,14 +248,14 @@ void snake_map_destroy(SnakeMap *map)
 
     pixel_map_destroy(&map->board_pixel_map);
 
-    pixel_map_destroy(&map->apple_tile);
+    pixel_map_destroy(&map->skin.apple_tile);
 
-    pixel_map_destroy(&map->snake_skin.horizontal);
-    pixel_map_destroy(&map->snake_skin.vertical);
-    pixel_map_destroy(&map->snake_skin.left_up);
-    pixel_map_destroy(&map->snake_skin.right_up);
-    pixel_map_destroy(&map->snake_skin.left_down);
-    pixel_map_destroy(&map->snake_skin.right_down);
+    pixel_map_destroy(&map->skin.horizontal);
+    pixel_map_destroy(&map->skin.vertical);
+    pixel_map_destroy(&map->skin.left_up);
+    pixel_map_destroy(&map->skin.right_up);
+    pixel_map_destroy(&map->skin.left_down);
+    pixel_map_destroy(&map->skin.right_down);
 
     free(map);
 }
@@ -287,7 +288,7 @@ int load_tile_from_file(const char *path, PixelMap *target_map)
 	    }
 	}
     }
-    
+
     // Iterate across lines
     int parens_amt = target_map->width;
     char **parens = (char**)calloc(parens_amt, sizeof(char*));
@@ -333,6 +334,7 @@ int load_tile_from_file(const char *path, PixelMap *target_map)
 	    target_map->data[index].g = atoi(commas[0] + 1);
 	    target_map->data[index].b = atoi(commas[1] + 1);
 	}
+
     }
 
     free(parens);
@@ -473,8 +475,8 @@ void load_skin(const char *path, SnakeMap *map)
 
 #define SNAKE_LOAD_SKIN(name)						\
     snprintf(buf, 256, "%s%s%s", g_tile_dir, KEY_STR_VALUE(snake_##name##_tile), g_tile_file_extension); \
-    map->snake_skin.name = pixel_map_create(map->tile_width, map->tile_height);	\
-    load_tile_from_file(buf, &map->snake_skin.name);
+    map->skin.name = pixel_map_create(map->tile_width, map->tile_height);	\
+    load_tile_from_file(buf, &map->skin.name);
     
     CREATE_KEY_STR_VAR(apple_tile);
 
@@ -505,8 +507,8 @@ void load_skin(const char *path, SnakeMap *map)
 	{
 	    // load apple_tile
 	    snprintf(buf, 256, "%s%s%s", g_tile_dir, KEY_STR_VALUE(apple_tile), g_tile_file_extension);
-	    map->apple_tile = pixel_map_create(map->tile_width, map->tile_height);
-	    load_tile_from_file(buf, &map->apple_tile);
+	    map->skin.apple_tile = pixel_map_create(map->tile_width, map->tile_height);
+	    load_tile_from_file(buf, &map->skin.apple_tile);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_vertical_tile))

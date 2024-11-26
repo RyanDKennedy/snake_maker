@@ -6,8 +6,13 @@
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "common.hpp"
 #include "drawing.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "shader.hpp"
 #include "quad.hpp"
 #include "pixel.hpp"
@@ -68,11 +73,15 @@ int main(void)
 
     // Viewport settings
     glViewport(0, 0, win_width, win_height);
+    glEnable(GL_DEPTH_TEST);
 
     // Pixel Map Settings
     PixelMap pixel_map = pixel_map_create(pix_width, pix_height);
     Shader shader(g_shader_vertex_code, g_shader_fragment_code);
     Quad quad;
+    quad.scale(pix_width, pix_height);
+    quad.translate(0, 0, -10.0f);
+    quad.update_model();
     float border_color[] = {0.0, 0.0, 0.0, 0.0};
     GLuint tex;
     glGenTextures(1, &tex);
@@ -89,12 +98,19 @@ int main(void)
 
     // Initialize generic_context
     GenericCtx generic_context;
+    generic_context.pix_width = pix_width;
+    generic_context.pix_height = pix_height;
     generic_context.game_state = GameState::menu;
     generic_context.settings = settings_from_file(g_settings_file);
     generic_context.key_list = key_list;
     generic_context.mouse_clicked = false;
     generic_context.mouse_released = false;
     generic_context.mouse_right_clicked = false;
+    
+    glm::mat4 proj = glm::ortho(0.0f, 800.f, 0.0f, 800.f, 0.1f, 100.f);
+    generic_context.vp_matrix = proj;
+
+
 
     // Initialize specific_context
     void* specific_context = (void*)menu_start(&generic_context);
@@ -106,6 +122,8 @@ int main(void)
     // Render Loop
     while(!glfwWindowShouldClose(window))
     {
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Calculate delta time
 	time_end = std::chrono::high_resolution_clock::now();
@@ -273,7 +291,7 @@ int main(void)
 	}
 
 	// Draw Top Bar
-	draw_rectangle(&pixel_map, 800, 50, Vec2i{0, 750}, Vec3i{50, 50, 50});
+	draw_rectangle(&pixel_map, pix_width, 50, Vec2i{0, 750}, Vec3i{50, 50, 50});
 	draw_sentence(&pixel_map, "snake maker", 8, 3, Vec2i{30, 760}, Vec3i{0, 255, 0});
 	char buf[255];
 	memset(buf, 0, 255);
@@ -286,6 +304,8 @@ int main(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pix_width, pix_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
 	shader.use();
 	glUniform1i(glGetUniformLocation(shader.m_program, "u_tex"), 0);
+	glUniformMatrix4fv(glGetUniformLocation(shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(quad.m_model_matrix));
+	glUniformMatrix4fv(glGetUniformLocation(shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_context.vp_matrix));
 	quad.draw();
 
 	// Reset variables that are set by input callbacks
@@ -298,6 +318,11 @@ int main(void)
     }
 
     pixel_map_destroy(&pixel_map);
+
+    glDeleteTextures(1, &tex);
+
+    glfwDestroyWindow(window);
+//    glfwTerminate(); this is proper, however glfw has a bug which makes this cause a segfault, so I simply don't use this
 
     return 0;
 }

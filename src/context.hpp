@@ -3,6 +3,10 @@
 #include "game_state.hpp"
 #include "math_types.hpp"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 struct Settings
 {
     int starting_speed;
@@ -10,10 +14,15 @@ struct Settings
 
     int tile_create_width;
     int tile_create_height;
+
+    int texture_filtering;
 };
 
 struct GenericCtx
 {
+    int pix_width;
+    int pix_height;
+
     bool mouse_clicked;
     bool mouse_right_clicked;
     bool mouse_released;
@@ -37,4 +46,6 @@ struct GenericCtx
     Settings settings;
 
     char *key_list;
+
+    glm::mat4 vp_matrix;
 };

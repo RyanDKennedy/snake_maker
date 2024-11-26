@@ -1,4 +1,5 @@
 starting_speed=5
 starting_size=1
-tile_create_width=10
-tile_create_height=10
+tile_create_width=16
+tile_create_height=16
+texture_filtering=0

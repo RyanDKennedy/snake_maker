@@ -15,10 +15,12 @@ project(snake_maker)
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIRS})
 
-set( GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
-set( GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
-set( GLAD_GL "" )
+set(GLFW_BUILD_DOCS OFF CACHE BOOL  "GLFW lib only" )
+set(GLFW_INSTALL OFF CACHE BOOL  "GLFW lib only" )
+set(GLAD_GL "" )
 add_subdirectory(${CMAKE_SOURCE_DIR}/external/glfw)
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/external/glm)
 
 add_executable(${PROJECT_NAME}
   src/main.cpp
@@ -53,5 +55,8 @@ target_include_directories(${PROJECT_NAME}
        ${CMAKE_SOURCE_DIR}/src/
 )
 
-target_link_libraries(${PROJECT_NAME} glfw)
+target_link_libraries(${PROJECT_NAME}
+	glfw
+	glm
+)
 

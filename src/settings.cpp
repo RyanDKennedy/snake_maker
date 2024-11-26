@@ -11,19 +11,21 @@
 #define STARTING_SIZE_INDEX 1
 #define TILE_CREATE_WIDTH_INDEX 2
 #define TILE_CREATE_HEIGHT_INDEX 3
-
+#define TEXTURE_FILTERING_INDEX 4
+ 
 SettingsCtx* settings_start(GenericCtx *generic_ctx)
 {
     SettingsCtx *ctx = (SettingsCtx*)calloc(1, sizeof(SettingsCtx));
     ctx->in_prog_settings = generic_ctx->settings;
 
-    ctx->values_amt = 4;
+    ctx->values_amt = 5;
     ctx->values = (IncrementValue*)calloc(ctx->values_amt, sizeof(IncrementValue));
 
     IncrementValue *starting_speed = &ctx->values[STARTING_SPEED_INDEX];
     IncrementValue *starting_size = &ctx->values[STARTING_SIZE_INDEX];
     IncrementValue *tile_create_width = &ctx->values[TILE_CREATE_WIDTH_INDEX];
     IncrementValue *tile_create_height = &ctx->values[TILE_CREATE_HEIGHT_INDEX];
+    IncrementValue *texture_filtering = &ctx->values[TEXTURE_FILTERING_INDEX];
 
     *starting_speed = create_increment_value(generic_ctx->settings.starting_speed, "starting_speed", Vec2i{200, 500}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
     starting_speed->has_bottom_limit = true;
@@ -35,11 +37,17 @@ SettingsCtx* settings_start(GenericCtx *generic_ctx)
 
     *tile_create_width = create_increment_value(generic_ctx->settings.tile_create_width, "tile_create_width", Vec2i{200, 400}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
     tile_create_width->has_bottom_limit = true;
-    tile_create_width->bottom_limit = 1;
+    tile_create_width->bottom_limit = 16;
 
     *tile_create_height = create_increment_value(generic_ctx->settings.tile_create_height, "tile_create_height", Vec2i{200, 350}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
     tile_create_height->has_bottom_limit = true;
-    tile_create_height->bottom_limit = 1;
+    tile_create_height->bottom_limit = 16;
+
+    *texture_filtering = create_increment_value(generic_ctx->settings.texture_filtering, "texture_filtering", Vec2i{200, 300}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
+    texture_filtering->has_bottom_limit = true;
+    texture_filtering->bottom_limit = 0;
+    texture_filtering->has_top_limit = true;
+    texture_filtering->top_limit = 1;
 
     return ctx;
 }
@@ -71,6 +79,7 @@ GameReturnCode settings_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Settin
     settings_ctx->in_prog_settings.starting_size = settings_ctx->values[STARTING_SIZE_INDEX].value;
     settings_ctx->in_prog_settings.tile_create_width = settings_ctx->values[TILE_CREATE_WIDTH_INDEX].value;
     settings_ctx->in_prog_settings.tile_create_height = settings_ctx->values[TILE_CREATE_HEIGHT_INDEX].value;
+    settings_ctx->in_prog_settings.texture_filtering = settings_ctx->values[TEXTURE_FILTERING_INDEX].value;
 
     return return_code;
 }
@@ -139,6 +148,7 @@ Settings settings_from_file(const char *path)
     CREATE_KEY_STR_VAR(starting_size);
     CREATE_KEY_STR_VAR(tile_create_width);
     CREATE_KEY_STR_VAR(tile_create_height);
+    CREATE_KEY_STR_VAR(texture_filtering);
 
     for (int i = 0; i < line_amt; ++i)
     {
@@ -158,6 +168,11 @@ Settings settings_from_file(const char *path)
 	{
 	    settings.tile_create_height = atoi(KEY_STR_VALUE(tile_create_height));
 	}
+	else if (KEY_STR_COND(texture_filtering))
+	{
+	    settings.texture_filtering = atoi(KEY_STR_VALUE(texture_filtering));
+	}
+
 
     }
 #undef CREATE_KEY_STR_VAR
@@ -194,6 +209,7 @@ void settings_write_to_file(const char *path, Settings *settings)
     WRITE_FIELD_TO_FILE(starting_size, "%d");
     WRITE_FIELD_TO_FILE(tile_create_width, "%d");
     WRITE_FIELD_TO_FILE(tile_create_height, "%d");
+    WRITE_FIELD_TO_FILE(texture_filtering, "%d");
 
 #undef WRITE_FIELD_TO_FILE
 
