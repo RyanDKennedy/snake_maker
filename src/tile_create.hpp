@@ -9,19 +9,20 @@
 
 struct TileCreateCtx
 {
-     int tile_width;
-     int tile_height;
+    int tile_width;
+    int tile_height;
     int tile_size;
-    RGBPixel *tile;
+    RGBAPixel *tile;
 
-    RGBPixel current_color;
+    RGBAPixel current_color;
     
     static const int old_colors_amt = 10;
-    RGBPixel old_colors[old_colors_amt];
+    RGBAPixel old_colors[old_colors_amt];
 
     Slider red_slider;
     Slider green_slider;
     Slider blue_slider;
+    Slider alpha_slider;
 
     PixelMap tile_pixmap;
 

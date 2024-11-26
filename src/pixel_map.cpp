@@ -9,8 +9,12 @@ PixelMap pixel_map_create(int width, int height)
     result.width = width;
     result.height = height;
     result.size = width * height;
-    result.data = (RGBPixel*)calloc(result.size, sizeof(RGBPixel));
-    memset(result.data, 0, sizeof(RGBPixel) * result.size);
+    result.data = (RGBAPixel*)calloc(result.size, sizeof(RGBAPixel));
+    memset(result.data, 0, sizeof(RGBAPixel) * result.size);
+    for (int i = 0; i < result.size; ++i)
+    {
+	result.data[i].a = 255;
+    }
     return result;
 }
 

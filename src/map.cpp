@@ -238,29 +238,26 @@ SnakeMap* snake_map_create(const char *path, bool texture_filtering)
 
     int min_filter = (texture_filtering)? GL_LINEAR : GL_NEAREST;
     int mag_filter = (texture_filtering)? GL_LINEAR : GL_NEAREST;
-    float border_color[] = {0.0, 0.0, 0.0, 0.0};
 
     // Create texture for map
     glGenTextures(1, &map->texture);
     glBindTexture(GL_TEXTURE_2D, map->texture);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, map->board_pixel_map.width, map->board_pixel_map.height, 0, GL_RGB, GL_UNSIGNED_BYTE, map->board_pixel_map.data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, map->board_pixel_map.width, map->board_pixel_map.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, map->board_pixel_map.data);
     map->aspect_ratio = (float)map->board_pixel_map.width / map->board_pixel_map.height;
 
     // Create texture for skin
 #define CREATE_TEXTURE_FOR_SKIN(name)\
     glGenTextures(1, &map->skin_textures.name);\
     glBindTexture(GL_TEXTURE_2D, map->skin_textures.name);\
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);\
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);\
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);\
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);\
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);\
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, map->skin.name.width, map->skin.name.height, 0, GL_RGB, GL_UNSIGNED_BYTE, map->skin.name.data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, map->skin.name.width, map->skin.name.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, map->skin.name.data);
 
     CREATE_TEXTURE_FOR_SKIN(apple_tile);
     CREATE_TEXTURE_FOR_SKIN(vertical);
@@ -394,10 +391,10 @@ int load_tile_from_file(const char *path, PixelMap *target_map)
 	    const int index = line_num * parens_amt + x; 
 	    target_map->data[index].r = atoi(parens[x] + 1);
 
-	    const char *commas[2];
+	    const char *commas[3];
 	    const int len = strlen(parens[x]);
 	    num = 0;
-	    for (int i = 0; i < len && num < 2; ++i)
+	    for (int i = 0; i < len && num < 3; ++i)
 	    {
 		if (*(parens[x] + i) == ',')
 		    commas[num++] = parens[x] + i;
@@ -405,6 +402,7 @@ int load_tile_from_file(const char *path, PixelMap *target_map)
 
 	    target_map->data[index].g = atoi(commas[0] + 1);
 	    target_map->data[index].b = atoi(commas[1] + 1);
+	    target_map->data[index].a = atoi(commas[2] + 1);
 	}
 
     }
@@ -416,7 +414,7 @@ int load_tile_from_file(const char *path, PixelMap *target_map)
     return 0;
 }
 
-void write_tile_to_file(const char *path, RGBPixel *tile_data, int tile_width, int tile_height)
+void write_tile_to_file(const char *path, RGBAPixel *tile_data, int tile_width, int tile_height)
 {
     FILE *fd = fopen(path, "w+");
     if (fd == NULL)
@@ -430,12 +428,12 @@ void write_tile_to_file(const char *path, RGBPixel *tile_data, int tile_width, i
 	for (int x = 0; x < tile_width - 1; ++x)
 	{
 	    const int index = y * tile_width + x;
-	    snprintf(buf, 256, "(%d, %d, %d), ", tile_data[index].r, tile_data[index].g, tile_data[index].b);
+	    snprintf(buf, 256, "(%d, %d, %d, %d), ", tile_data[index].r, tile_data[index].g, tile_data[index].b, tile_data[index].a);
 	    fwrite(buf, sizeof(char), strlen(buf), fd);
 	}
 	int x = tile_width - 1;
 	const int index = y * tile_width + x;
-	snprintf(buf, 256, "(%d, %d, %d),\n", tile_data[index].r, tile_data[index].g, tile_data[index].b);
+	snprintf(buf, 256, "(%d, %d, %d, %d),\n", tile_data[index].r, tile_data[index].g, tile_data[index].b, tile_data[index].a);
 	fwrite(buf, sizeof(char), strlen(buf), fd);
     }
 
@@ -443,12 +441,12 @@ void write_tile_to_file(const char *path, RGBPixel *tile_data, int tile_width, i
     for (int x = 0; x < tile_width - 1; ++x)
     {
 	const int index = y * tile_width + x;
-	snprintf(buf, 256, "(%d, %d, %d), ", tile_data[index].r, tile_data[index].g, tile_data[index].b);
+	snprintf(buf, 256, "(%d, %d, %d, %d), ", tile_data[index].r, tile_data[index].g, tile_data[index].b, tile_data[index].a);
 	fwrite(buf, sizeof(char), strlen(buf), fd);
     }
     int x = tile_width - 1;
     const int index = y * tile_width + x;
-    snprintf(buf, 256, "(%d, %d, %d),", tile_data[index].r, tile_data[index].g, tile_data[index].b);
+    snprintf(buf, 256, "(%d, %d, %d, %d),", tile_data[index].r, tile_data[index].g, tile_data[index].b, tile_data[index].a);
     fwrite(buf, sizeof(char), strlen(buf), fd);
     
     fclose(fd);

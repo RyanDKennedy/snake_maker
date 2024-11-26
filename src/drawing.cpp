@@ -272,7 +272,7 @@ void draw_pixmap(PixelMap *dest, PixelMap *src, Vec2i pos)
 		continue;
 #endif
 	    
-	    memcpy(&dest->data[dest_pos[0] + dest_pos[1] * dest->width], &src->data[x + y * src->width], sizeof(RGBPixel));
+	    memcpy(&dest->data[dest_pos[0] + dest_pos[1] * dest->width], &src->data[x + y * src->width], sizeof(RGBAPixel));
 	}
 
     }

@@ -16,7 +16,7 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
     ctx->tile_width = generic_ctx->settings.tile_create_width;
     ctx->tile_height = generic_ctx->settings.tile_create_height;
     ctx->tile_size = ctx->tile_width * ctx->tile_height;
-    ctx->tile = (RGBPixel*)calloc(ctx->tile_size, sizeof(RGBPixel));
+    ctx->tile = (RGBAPixel*)calloc(ctx->tile_size, sizeof(RGBAPixel));
 
     for (int i = 0 ; i < ctx->tile_size; ++i)
     {
@@ -24,22 +24,27 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
 	ctx->tile[i].r = value;
 	ctx->tile[i].g = value;
 	ctx->tile[i].b = value;
+	ctx->tile[i].a = 255;
     }
     ctx->tile_pixmap = pixel_map_create(400, 400);
 
     ctx->red_slider = slider_create(0, 255, 600, 30, Vec2i{100, 90});
     ctx->green_slider = slider_create(0, 255, 600, 30, Vec2i{100, 50});
     ctx->blue_slider = slider_create(0, 255, 600, 30, Vec2i{100, 10});
+    ctx->alpha_slider = slider_create(0, 255, 600, 30, Vec2i{100, 650});
+    ctx->alpha_slider.value = 255;
 
     ctx->current_color.r = ctx->red_slider.value;
     ctx->current_color.g = ctx->green_slider.value;
     ctx->current_color.b = ctx->blue_slider.value;
+    ctx->current_color.a = ctx->alpha_slider.value;
 
     for (int i = 0; i < ctx->old_colors_amt; ++i)
     {
 	ctx->old_colors[i].r = 0;
 	ctx->old_colors[i].g = 0;
 	ctx->old_colors[i].b = 0;
+	ctx->old_colors[i].a = 255;
     }
 
     ctx->text = text_box_create(25, Vec2i{150, 700}, 8, 2);
@@ -85,7 +90,7 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 	    tile_create_ctx->red_slider.value = tile_create_ctx->old_colors[y].r;
 	    tile_create_ctx->green_slider.value = tile_create_ctx->old_colors[y].g;
 	    tile_create_ctx->blue_slider.value = tile_create_ctx->old_colors[y].b;
-
+	    tile_create_ctx->alpha_slider.value = tile_create_ctx->old_colors[y].a;
 	}
     }
 
@@ -102,6 +107,7 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 	    tile_create_ctx->red_slider.value = tile_create_ctx->tile[index].r;
 	    tile_create_ctx->green_slider.value = tile_create_ctx->tile[index].g;
 	    tile_create_ctx->blue_slider.value = tile_create_ctx->tile[index].b;
+	    tile_create_ctx->alpha_slider.value = tile_create_ctx->tile[index].a;
 	}
     }
 
@@ -109,11 +115,13 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
     slider_update(&tile_create_ctx->red_slider, generic_ctx->mouse_pos, generic_ctx->mouse_clicked);
     slider_update(&tile_create_ctx->green_slider, generic_ctx->mouse_pos, generic_ctx->mouse_clicked);
     slider_update(&tile_create_ctx->blue_slider, generic_ctx->mouse_pos, generic_ctx->mouse_clicked);
+    slider_update(&tile_create_ctx->alpha_slider, generic_ctx->mouse_pos, generic_ctx->mouse_clicked);
 
     // update current color
     tile_create_ctx->current_color.r = tile_create_ctx->red_slider.value;
     tile_create_ctx->current_color.g = tile_create_ctx->green_slider.value;
     tile_create_ctx->current_color.b = tile_create_ctx->blue_slider.value;
+    tile_create_ctx->current_color.a = tile_create_ctx->alpha_slider.value;
 
     // Updating tile
     if (generic_ctx->mouse_clicked)
@@ -130,10 +138,10 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 	    int index_of_old_color = tile_create_ctx->old_colors_amt - 1;
 	    for (int i = 0; i < tile_create_ctx->old_colors_amt; ++i)
 	    {
-		RGBPixel cur = tile_create_ctx->current_color;
-		RGBPixel now = tile_create_ctx->old_colors[i];
+		RGBAPixel cur = tile_create_ctx->current_color;
+		RGBAPixel now = tile_create_ctx->old_colors[i];
 
-		if (cur.r == now.r && cur.g == now.g && cur.b == now.b)
+		if (cur.r == now.r && cur.g == now.g && cur.b == now.b && cur.a == now.a)
 		{
 		    index_of_old_color = i;
 		    break;
@@ -184,7 +192,7 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 	draw_rectangle(pixel_map, pixel_map->width, 30, Vec2i{0, 130}, color);
 
 	char buf[256];
-	snprintf(buf, 256, "# %02x %02x %02x", color[0], color[1], color[2]);
+	snprintf(buf, 256, "# %02x%02x%02x %02x", color[0], color[1], color[2], tile_create_ctx->current_color.a);
 
 	draw_sentence(pixel_map, buf, 8, 2, Vec2i{0, 170}, Vec3i{255, 255, 255});
 
@@ -194,6 +202,7 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
     draw_slider(pixel_map, &tile_create_ctx->red_slider, Vec3i{255, 0, 0});
     draw_slider(pixel_map, &tile_create_ctx->green_slider, Vec3i{0, 255, 0});
     draw_slider(pixel_map, &tile_create_ctx->blue_slider, Vec3i{0, 0, 255});
+    draw_slider(pixel_map, &tile_create_ctx->alpha_slider, Vec3i{255, 255, 255});
 
     // Drawing to pixmap
     for (int y = 0; y < tile_create_ctx->tile_height; ++y)

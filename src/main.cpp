@@ -72,6 +72,8 @@ int main(void)
     // Viewport settings
     glViewport(0, 0, win_width, win_height);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Pixel Map Settings
     PixelMap pixel_map = pixel_map_create(pix_width, pix_height);
@@ -80,13 +82,11 @@ int main(void)
     quad.scale(pix_width, pix_height);
     quad.translate(0, 0, -10.0f);
     quad.update_model();
-    float border_color[] = {0.0, 0.0, 0.0, 0.0};
     GLuint tex;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pix_width, pix_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
@@ -120,14 +120,18 @@ int main(void)
     // Render Loop
     while(!glfwWindowShouldClose(window))
     {
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	// Calculate delta time
 	time_end = std::chrono::high_resolution_clock::now();
 	generic_context.delta_time = std::chrono::duration<double>(time_end-time_start).count();
 	time_start = time_end;
-	
+
+	// Clear
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	memset(pixel_map.data, 0, pixel_map.size * sizeof(RGBAPixel));
+	for (int i = 0; i < pixel_map.size; ++i)
+	{
+	    pixel_map.data[i].a = 255;
+	}
 	
 	// Fill generic context
 	{
@@ -166,9 +170,6 @@ int main(void)
 	generic_context.last_pressed_key = key_last_pressed;	    
 
 	
-	// Clear
-	memset(pixel_map.data, 0, pixel_map.size * sizeof(RGBPixel));
-
 	// Do action for the specified mode/state
 	GameReturnCode return_code = GameReturnCode::none;
 	switch (generic_context.game_state)
@@ -300,7 +301,7 @@ int main(void)
 	// Drawing the pixmap onto the screen
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pix_width, pix_height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixel_map.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pix_width, pix_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel_map.data);
 	shader.use();
 	glUniform1i(glGetUniformLocation(shader.m_program, "u_tex"), 0);
 	glUniformMatrix4fv(glGetUniformLocation(shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(quad.m_model_matrix));

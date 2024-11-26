@@ -7,7 +7,7 @@ struct PixelMap
     int height;
     int width;
     int size;
-    RGBPixel *data;
+    RGBAPixel *data;
 };
 
 PixelMap pixel_map_create(int width, int height);
