@@ -291,7 +291,7 @@ int main(void)
 	}
 
 	// Draw Top Bar
-	draw_rectangle(&pixel_map, pix_width, 50, Vec2i{0, 750}, Vec3i{50, 50, 50});
+	draw_rectangle(&pixel_map, pix_width, 50, Vec2i{0, 750}, Vec3i{50, 50, 50}, 255);
 	draw_sentence(&pixel_map, "snake maker", 8, 3, Vec2i{30, 760}, Vec3i{0, 255, 0});
 	char buf[255];
 	memset(buf, 0, 255);

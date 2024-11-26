@@ -169,7 +169,7 @@ void draw_sentence_partial(PixelMap *pixel_map, const char *sentence, int font_s
     }
 }
 
-void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i color)
+void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i color, int alpha)
 {
     for (int y = pos[1]; y < pos[1] + height; ++y)
     {
@@ -178,6 +178,7 @@ void draw_rectangle(PixelMap *pixel_map, int width, int height, Vec2i pos, Vec3i
 	    pixel_map->data[y * pixel_map->width + x].r = color[0];
 	    pixel_map->data[y * pixel_map->width + x].g = color[1];
 	    pixel_map->data[y * pixel_map->width + x].b = color[2];
+	    pixel_map->data[y * pixel_map->width + x].a = alpha;
 	}
     }
 
@@ -225,7 +226,7 @@ void draw_button(PixelMap *pixel_map, Button *button, bool hover)
     text_pos[0] = button->col_box.bottom_left[0] + (button->width / 2) - (strlen(text) * char_size / 2);
     text_pos[1] = button->col_box.bottom_left[1] + (button->height / 2) - (char_size / 2);
 
-    draw_rectangle(pixel_map, button->width, button->height, button->col_box.bottom_left, bg);
+    draw_rectangle(pixel_map, button->width, button->height, button->col_box.bottom_left, bg, 229);
     draw_sentence(pixel_map, text, button->font_size, button->font_mag, text_pos, fg);
 }
 
@@ -272,7 +273,7 @@ void draw_pixmap(PixelMap *dest, PixelMap *src, Vec2i pos)
 		continue;
 #endif
 	    
-	    memcpy(&dest->data[dest_pos[0] + dest_pos[1] * dest->width], &src->data[x + y * src->width], sizeof(RGBAPixel));
+	    dest->data[dest_pos[0] + dest_pos[1] * dest->width] = src->data[x + y * src->width];
 	}
 
     }

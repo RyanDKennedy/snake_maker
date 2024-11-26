@@ -123,7 +123,7 @@ GameReturnCode menu_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MenuCtx *m
 	draw_sentence(pixel_map, "map selector", 8, 2, Vec2i{290, 330}, Vec3i{255, 255, 255});
 
 	// Surrounding rectangle
-	draw_rectangle(&menu_ctx->map_selector_pixel_map, menu_ctx->map_selector_pixel_map.width, menu_ctx->map_selector_pixel_map.height, Vec2i{0, 0}, Vec3i{20, 20, 20});
+	draw_rectangle(&menu_ctx->map_selector_pixel_map, menu_ctx->map_selector_pixel_map.width, menu_ctx->map_selector_pixel_map.height, Vec2i{0, 0}, Vec3i{20, 20, 20}, 255);
 
 	const int pixmap_x = 200;
 	const int pixmap_y = 20;

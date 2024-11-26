@@ -55,7 +55,7 @@ void text_box_parse_key_list(TextBox *text_box, char *key_list)
 
 void draw_text_box(PixelMap *pixel_map, TextBox *text_box)
 {
-    draw_rectangle(pixel_map, text_box->width, text_box->height, text_box->pos, Vec3i{255, 255, 255});
+    draw_rectangle(pixel_map, text_box->width, text_box->height, text_box->pos, Vec3i{255, 255, 255}, 255);
 
     Vec2i pos;
     pos[0] = text_box->pos[0] + text_box->font_size * text_box->font_mag;
@@ -67,5 +67,5 @@ void draw_text_box(PixelMap *pixel_map, TextBox *text_box)
     cur_pos[0] = pos[0] + strlen(text_box->text) * text_box->font_size * text_box->font_mag;
     cur_pos[1] = text_box->pos[1] + text_box->height / 8;
 
-    draw_rectangle(pixel_map, 10, text_box->height * 0.75, cur_pos, Vec3i{50, 50, 50});
+    draw_rectangle(pixel_map, 10, text_box->height * 0.75, cur_pos, Vec3i{50, 50, 50}, 255);
 }

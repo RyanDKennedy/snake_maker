@@ -7,6 +7,9 @@
 #include "text_box.hpp"
 #include "button.hpp"
 
+#include "quad.hpp"
+#include "shader.hpp"
+
 struct TileCreateCtx
 {
     int tile_width;
@@ -29,6 +32,10 @@ struct TileCreateCtx
     TextBox text;
     Button save_btn;
     Button load_btn;
+
+    Quad bg_quad;
+    GLuint bg_tex;
+    Shader bg_shader;
 
 };
 

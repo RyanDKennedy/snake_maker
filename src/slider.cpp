@@ -41,7 +41,7 @@ void draw_slider(PixelMap* pixel_map, Slider *slider, Vec3i color)
     Vec2i bar_pos;
     bar_pos[0] = slider->pos[0] + slider->selector_size / 2;
     bar_pos[1] = slider->pos[1] + slider->height / 2 - slider->height / 4;
-    draw_rectangle(pixel_map, slider->width - slider->selector_size, slider->height / 2, bar_pos, color);
+    draw_rectangle(pixel_map, slider->width - slider->selector_size, slider->height / 2, bar_pos, color, 255);
     
     // draw selector
     CollisionBox col_box;
@@ -55,5 +55,5 @@ void draw_slider(PixelMap* pixel_map, Slider *slider, Vec3i color)
     Vec2i slider_pos;
     slider_pos[0] = (int)(percent * (col_box.top_right[0] - col_box.bottom_left[0])) + slider->pos[0];
     slider_pos[1] = slider->pos[1];
-    draw_rectangle(pixel_map, slider->selector_size, slider->height, slider_pos, Vec3i{255, 255, 255});
+    draw_rectangle(pixel_map, slider->selector_size, slider->height, slider_pos, Vec3i{255, 255, 255}, 255);
 }

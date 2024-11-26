@@ -5,10 +5,45 @@
 #include "game_state.hpp"
 #include "pixel_map.hpp"
 #include "map.hpp"
+#include "quad.hpp"
 #include "text_box.hpp"
 
 #include <cstdlib>
 #include <cstring>
+
+#include <stb_image.h>
+
+inline const char *g_shader_bg_vertex_code =
+"#version 330\n\
+\n\
+layout (location = 0) in vec3 a_pos;\n\
+layout (location = 1) in vec2 a_tex_coord;\n\
+uniform mat4 u_model;\n\
+uniform mat4 u_vp;\n\
+uniform int u_tile_x_amt;\n\
+uniform int u_tile_y_amt;\n\
+\n\
+out vec2 v_tex_coord;\n\
+\n\
+void main()\n\
+{\n\
+    v_tex_coord = vec2(a_tex_coord.x * u_tile_x_amt, a_tex_coord.y * u_tile_y_amt);\n\
+    gl_Position = u_vp * u_model * vec4(a_pos, 1.0f);\n\
+}";
+
+inline const char *g_shader_bg_fragment_code =
+"#version 330\n\
+\n\
+out vec4 fragment_color;\n\
+\n\
+in vec2 v_tex_coord;\n\
+\n\
+uniform sampler2D u_tex;\n\
+\n\
+void main()\n\
+{\n\
+    fragment_color = texture(u_tex, v_tex_coord);\n\
+}";
 
 TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
 {
@@ -18,19 +53,45 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
     ctx->tile_size = ctx->tile_width * ctx->tile_height;
     ctx->tile = (RGBAPixel*)calloc(ctx->tile_size, sizeof(RGBAPixel));
 
+    // Background
+    new (&ctx->bg_quad) Quad;
+    new (&ctx->bg_shader) Shader(g_shader_bg_vertex_code, g_shader_bg_fragment_code);
+    
+    // Create texture for background
+    int min_filter = (generic_ctx->settings.texture_filtering)? GL_LINEAR : GL_NEAREST;
+    int mag_filter = (generic_ctx->settings.texture_filtering)? GL_LINEAR : GL_NEAREST;
+    glGenTextures(1, &ctx->bg_tex);
+    glBindTexture(GL_TEXTURE_2D, ctx->bg_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+
+    char buf[256];
+    snprintf(buf, 256, "%s%s", g_background_dir, "transparent.png");
+    int w, h, ch;
+    void *data = stbi_load(buf, &w, &h, &ch, 0);
+    int format = (ch == 4)? GL_RGBA : GL_RGB;
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, data);
+    stbi_image_free(data);
+
+
+
     for (int i = 0 ; i < ctx->tile_size; ++i)
     {
-	int value = (int)(255.0 / (float)ctx->tile_size * (float)i);
-	ctx->tile[i].r = value;
-	ctx->tile[i].g = value;
-	ctx->tile[i].b = value;
-	ctx->tile[i].a = 255;
+	ctx->tile[i].r = 0;
+	ctx->tile[i].g = 0;
+	ctx->tile[i].b = 0;
+	ctx->tile[i].a = 0;
     }
     ctx->tile_pixmap = pixel_map_create(400, 400);
 
     ctx->red_slider = slider_create(0, 255, 600, 30, Vec2i{100, 90});
+    ctx->red_slider.value = 255;
     ctx->green_slider = slider_create(0, 255, 600, 30, Vec2i{100, 50});
+    ctx->green_slider.value = 255;
     ctx->blue_slider = slider_create(0, 255, 600, 30, Vec2i{100, 10});
+    ctx->blue_slider.value = 255;
     ctx->alpha_slider = slider_create(0, 255, 600, 30, Vec2i{100, 650});
     ctx->alpha_slider.value = 255;
 
@@ -44,7 +105,7 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
 	ctx->old_colors[i].r = 0;
 	ctx->old_colors[i].g = 0;
 	ctx->old_colors[i].b = 0;
-	ctx->old_colors[i].a = 255;
+	ctx->old_colors[i].a = 0;
     }
 
     ctx->text = text_box_create(25, Vec2i{150, 700}, 8, 2);
@@ -76,6 +137,25 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
     Vec2i tile_pos = {(pixel_map->width - tile_create_ctx->tile_pixmap.width) / 2, (pixel_map->height - tile_create_ctx->tile_pixmap.height) / 2};
     int pixel_width = tile_create_ctx->tile_pixmap.width / tile_create_ctx->tile_width;
     int pixel_height = tile_create_ctx->tile_pixmap.height / tile_create_ctx->tile_height;
+
+    // Draw background
+
+    tile_create_ctx->bg_quad.m_position[0] = tile_pos[0];
+    tile_create_ctx->bg_quad.m_position[1] = tile_pos[1];
+    tile_create_ctx->bg_quad.m_position[2] = -11.f;
+    tile_create_ctx->bg_quad.m_scale[0] = tile_create_ctx->tile_pixmap.width;
+    tile_create_ctx->bg_quad.m_scale[1] = tile_create_ctx->tile_pixmap.height;
+
+    glBindTexture(GL_TEXTURE_2D, tile_create_ctx->bg_tex);
+    tile_create_ctx->bg_quad.update_model();
+    tile_create_ctx->bg_shader.use();
+    glUniform1i(glGetUniformLocation(tile_create_ctx->bg_shader.m_program, "u_tex"), 0);
+    glUniformMatrix4fv(glGetUniformLocation(tile_create_ctx-> bg_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_ctx->vp_matrix));
+    glUniformMatrix4fv(glGetUniformLocation(tile_create_ctx->bg_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(tile_create_ctx->bg_quad.m_model_matrix));
+    glUniform1i(glGetUniformLocation(tile_create_ctx->bg_shader.m_program, "u_tile_x_amt"), tile_create_ctx->tile_width);
+    glUniform1i(glGetUniformLocation(tile_create_ctx->bg_shader.m_program, "u_tile_y_amt"), tile_create_ctx->tile_height);
+    tile_create_ctx->bg_quad.draw();
+
 
     Vec2i old_colors_pos = {0, 300};
     const int old_color_pixel_width = 30;
@@ -178,8 +258,8 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 	    pos[0] = border_pos[0] + border_size;
 	    pos[1] = border_pos[1] + border_size;
 
-	    draw_rectangle(pixel_map, 30, 30, border_pos, bg);
-	    draw_rectangle(pixel_map, old_color_pixel_width - border_size * 2, old_color_pixel_height - border_size * 2, pos, col);
+	    draw_rectangle(pixel_map, 30, 30, border_pos, bg, 255);
+	    draw_rectangle(pixel_map, old_color_pixel_width - border_size * 2, old_color_pixel_height - border_size * 2, pos, col, tile_create_ctx->old_colors[i].a);
 	}
     }
 
@@ -189,7 +269,7 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 	color[0] = tile_create_ctx->current_color.r;
 	color[1] = tile_create_ctx->current_color.g;
 	color[2] = tile_create_ctx->current_color.b;
-	draw_rectangle(pixel_map, pixel_map->width, 30, Vec2i{0, 130}, color);
+	draw_rectangle(pixel_map, pixel_map->width, 30, Vec2i{0, 130}, color, 255);
 
 	char buf[256];
 	snprintf(buf, 256, "# %02x%02x%02x %02x", color[0], color[1], color[2], tile_create_ctx->current_color.a);
@@ -216,15 +296,11 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 	    color[1] = tile_create_ctx->tile[index].g;
 	    color[2] = tile_create_ctx->tile[index].b;
 
-	    draw_rectangle(&tile_create_ctx->tile_pixmap, pixel_width, pixel_height, Vec2i{x * pixel_width, y *pixel_height}, color);
+	    draw_rectangle(&tile_create_ctx->tile_pixmap, pixel_width, pixel_height, Vec2i{x * pixel_width, y *pixel_height}, color, tile_create_ctx->tile[index].a);
 	}
     }    
 
     // Drawing tile
-    int border_size = 20;
-    draw_rectangle(pixel_map, tile_create_ctx->tile_pixmap.width + border_size * 2, tile_create_ctx->tile_pixmap.height + border_size * 2, Vec2i{tile_pos[0] - border_size, tile_pos[1] - border_size}, Vec3i{50, 50, 50});
-    border_size = 5;
-    draw_rectangle(pixel_map, tile_create_ctx->tile_pixmap.width + border_size * 2, tile_create_ctx->tile_pixmap.height + border_size * 2, Vec2i{tile_pos[0] - border_size, tile_pos[1] - border_size}, Vec3i{0, 0, 0});
     draw_pixmap(pixel_map, &tile_create_ctx->tile_pixmap, tile_pos);
 
     // Drawing text box
@@ -287,6 +363,10 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 
 void tile_create_end(TileCreateCtx *tile_create_ctx)
 {
+    tile_create_ctx->bg_quad.~Quad();
+    tile_create_ctx->bg_shader.~Shader();
+    glDeleteTextures(1, &tile_create_ctx->bg_tex);
+
     free(tile_create_ctx->tile);
     text_box_destroy(&tile_create_ctx->text);
     pixel_map_destroy(&tile_create_ctx->tile_pixmap);
