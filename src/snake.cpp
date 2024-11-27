@@ -26,7 +26,7 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
     strcpy(snake_ctx->map_path, g_map_dir);
     strcat(snake_ctx->map_path, map_name);
     strcat(snake_ctx->map_path, g_map_file_extension);
-    snake_ctx->map = snake_map_create(snake_ctx->map_path, generic_ctx->settings.texture_filtering == 1);
+    snake_ctx->map = snake_map_create(snake_ctx->map_path);
 
     // Configure maps model matrix
     if (snake_ctx->map->aspect_ratio > 1)
@@ -34,26 +34,26 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
 	float width = generic_ctx->pix_width * 0.75;
 	float height = width / snake_ctx->map->aspect_ratio;
 
-	snake_ctx->map_quad.scale(width, height);
-	snake_ctx->map_quad.translate((generic_ctx->pix_width - width) / 2, (generic_ctx->pix_height - height) / 2, -9.f);
+	snake_ctx->map_width = width;
+	snake_ctx->map_height = height;
+	snake_ctx->map_pos[0] = (generic_ctx->pix_width - width) / 2;
+	snake_ctx->map_pos[1] = (generic_ctx->pix_height - height) / 2;
     }
     else
     {
 	float height = generic_ctx->pix_height * 0.75;
 	float width = height * snake_ctx->map->aspect_ratio;
 
-	snake_ctx->map_quad.scale(width, height);
-	snake_ctx->map_quad.translate((generic_ctx->pix_width - width) / 2, (generic_ctx->pix_height - height) / 2, -9.f);
+	snake_ctx->map_width = width;
+	snake_ctx->map_height = height;
+	snake_ctx->map_pos[0] = (generic_ctx->pix_width - width) / 2;
+	snake_ctx->map_pos[1] = (generic_ctx->pix_height - height) / 2;
     }
-    snake_ctx->map_quad.update_model();	
 
     // Create tile textures
-    snake_ctx->tile_width = snake_ctx->map_quad.m_scale[0] / snake_ctx->map->width;
-    snake_ctx->tile_height = snake_ctx->map_quad.m_scale[1] / snake_ctx->map->height;
+    snake_ctx->tile_width = snake_ctx->map_width / snake_ctx->map->width;
+    snake_ctx->tile_height = snake_ctx->map_height / snake_ctx->map->height;
     snake_ctx->tile_quad.scale(snake_ctx->tile_width, snake_ctx->tile_height);
-
-
-
 
     // Snake initialization
     SnakeSegment head;
@@ -102,18 +102,11 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
     GameReturnCode return_code = GameReturnCode::none;
 
     Vec2i map_pos;
-    map_pos[0] = snake_ctx->map_quad.m_position[0];
-    map_pos[1] = snake_ctx->map_quad.m_position[1];
+    map_pos[0] = snake_ctx->map_pos[0];
+    map_pos[1] = snake_ctx->map_pos[1];
 
     // Draw map
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, snake_ctx->map->texture);
-    snake_ctx->quad_shader.use();
-    glUniform1i(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_tex"), 0);
-    snake_ctx->map_quad.update_model();
-    glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(snake_ctx->map_quad.m_model_matrix));
-    glUniformMatrix4fv(glGetUniformLocation(snake_ctx->quad_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_ctx->vp_matrix));
-    snake_ctx->map_quad.draw();
+    draw_snake_map(snake_ctx->map, snake_ctx->map_width, snake_ctx->map_height, map_pos, generic_ctx->vp_matrix);
 
     // Parse Input
     switch (generic_ctx->last_pressed_key)

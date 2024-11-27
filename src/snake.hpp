@@ -41,10 +41,11 @@ struct SnakeCtx
     int apples_amt;
     Vec2i *apples;
 
-    Quad map_quad;
-    Shader quad_shader;
-    GLuint map_texture;
+    float map_width;
+    float map_height;
+    Vec2i map_pos;
 
+    Shader quad_shader;
     Quad tile_quad;
     int tile_width;
     int tile_height;

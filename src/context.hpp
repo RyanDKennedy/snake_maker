@@ -15,7 +15,7 @@ struct Settings
     int tile_create_width;
     int tile_create_height;
 
-    int texture_filtering;
+//    int texture_filtering;
 };
 
 struct GenericCtx

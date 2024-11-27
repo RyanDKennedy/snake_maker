@@ -7,7 +7,9 @@
 #include <cstdio>
 #include <string>
 
-SnakeMap* snake_map_create(const char *path, bool texture_filtering)
+#include <glm/gtc/type_ptr.hpp>
+
+SnakeMap* snake_map_create(const char *path)
 {
     // Create map
     SnakeMap *map = (SnakeMap*)calloc(1, sizeof(SnakeMap));
@@ -185,8 +187,16 @@ SnakeMap* snake_map_create(const char *path, bool texture_filtering)
 
 
     // Create the tile maps
+
     map->tiles_amt = board_map_index - tile_definitions_index - 1;
     map->tile_maps = (PixelMap*)calloc(map->tiles_amt, sizeof(PixelMap));
+    map->tile_textures = (GLuint*)calloc(map->tiles_amt, sizeof(GLuint));
+    map->tile_names = (char**)calloc(map->tiles_amt, sizeof(char*));
+    for (int i = 0 ; i < map->tiles_amt; ++i)
+    {
+	map->tile_names[i] = (char*)calloc(256, sizeof(char));
+    }
+
     for (int i = 0; i < map->tiles_amt; ++i)
     {
 	const int line_num = tile_definitions_index + i + 1;
@@ -216,6 +226,15 @@ SnakeMap* snake_map_create(const char *path, bool texture_filtering)
 	    free(lines);
 	    exit(1);
 	}
+	
+	strcpy(map->tile_names[tile_number], tile_path);
+	glGenTextures(1, &map->tile_textures[tile_number]);
+	glBindTexture(GL_TEXTURE_2D, map->tile_textures[tile_number]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, map->tile_maps[tile_number].width, map->tile_maps[tile_number].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, map->tile_maps[tile_number].data);
     }
 
     // Get the board map
@@ -226,62 +245,20 @@ SnakeMap* snake_map_create(const char *path, bool texture_filtering)
     map->collision_map = (int*)calloc(map->size, sizeof(int));
     load_grid_map(lines + collision_map_index + 1, map->collision_map, map->width, map->height);
 
-    // Create board pixel map
-    map->board_pixel_map = pixel_map_create(map->width * map->tile_width, map->height * map->tile_height);
-    draw_snake_map(&map->board_pixel_map, map);
-
     // Cleanup file parsing stuff
     free(lines);
 
+    map->aspect_ratio = (float)(map->width * map->tile_width) / (map->height * map->tile_height);
 
-    // OpenGL Stuff
-
-    int min_filter = (texture_filtering)? GL_LINEAR : GL_NEAREST;
-    int mag_filter = (texture_filtering)? GL_LINEAR : GL_NEAREST;
-
-    // Create texture for map
-    glGenTextures(1, &map->texture);
-    glBindTexture(GL_TEXTURE_2D, map->texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, map->board_pixel_map.width, map->board_pixel_map.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, map->board_pixel_map.data);
-    map->aspect_ratio = (float)map->board_pixel_map.width / map->board_pixel_map.height;
-
-    // Create texture for skin
-#define CREATE_TEXTURE_FOR_SKIN(name)\
-    glGenTextures(1, &map->skin_textures.name);\
-    glBindTexture(GL_TEXTURE_2D, map->skin_textures.name);\
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);\
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);\
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);\
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);\
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, map->skin.name.width, map->skin.name.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, map->skin.name.data);
-
-    CREATE_TEXTURE_FOR_SKIN(apple_tile);
-    CREATE_TEXTURE_FOR_SKIN(vertical);
-    CREATE_TEXTURE_FOR_SKIN(horizontal);
-    CREATE_TEXTURE_FOR_SKIN(left_up);
-    CREATE_TEXTURE_FOR_SKIN(right_up);
-    CREATE_TEXTURE_FOR_SKIN(left_down);
-    CREATE_TEXTURE_FOR_SKIN(right_down);
-    CREATE_TEXTURE_FOR_SKIN(tail_down);
-    CREATE_TEXTURE_FOR_SKIN(tail_up);
-    CREATE_TEXTURE_FOR_SKIN(tail_left);
-    CREATE_TEXTURE_FOR_SKIN(tail_right);
-    CREATE_TEXTURE_FOR_SKIN(head_down);
-    CREATE_TEXTURE_FOR_SKIN(head_up);
-    CREATE_TEXTURE_FOR_SKIN(head_left);
-    CREATE_TEXTURE_FOR_SKIN(head_right);
-
-#undef CREATE_TEXTURE_FOR_SKIN
+    new(&map->tile_quad) Quad();
+    new(&map->tile_shader) Shader(g_shader_vertex_code, g_shader_fragment_code);
 
     return map;
 }
 
 void snake_map_destroy(SnakeMap *map)
 {
+    // destroy skin
     glDeleteTextures(1, &map->skin_textures.apple_tile);
     glDeleteTextures(1, &map->skin_textures.vertical);
     glDeleteTextures(1, &map->skin_textures.horizontal);
@@ -297,34 +274,29 @@ void snake_map_destroy(SnakeMap *map)
     glDeleteTextures(1, &map->skin_textures.head_up);
     glDeleteTextures(1, &map->skin_textures.head_left);
     glDeleteTextures(1, &map->skin_textures.head_right);
-    glDeleteTextures(1, &map->texture);
 
+    // destroy tile pixmaps
     for (int i = 0; i < map->tiles_amt; ++i)
     {
 	pixel_map_destroy(&map->tile_maps[i]);
     }
-    free(map->tile_maps);
+
+    // destroy tile names
+    for (int i = 0; i < map->tiles_amt; ++i)
+    {
+	free(map->tile_names[i]);
+    }
+    free(map->tile_names);
+
+    map->tile_quad.~Quad();
+    map->tile_shader.~Shader();
+
+    // destroy tile textures
+    glDeleteTextures(map->tiles_amt, map->tile_textures);
+    free(map->tile_textures);
 
     free(map->board_map);
     free(map->collision_map);
-
-    pixel_map_destroy(&map->board_pixel_map);
-    pixel_map_destroy(&map->skin.apple_tile);
-    pixel_map_destroy(&map->skin.horizontal);
-    pixel_map_destroy(&map->skin.vertical);
-    pixel_map_destroy(&map->skin.left_up);
-    pixel_map_destroy(&map->skin.right_up);
-    pixel_map_destroy(&map->skin.left_down);
-    pixel_map_destroy(&map->skin.right_down);
-    pixel_map_destroy(&map->skin.head_down);
-    pixel_map_destroy(&map->skin.head_up);
-    pixel_map_destroy(&map->skin.head_left);
-    pixel_map_destroy(&map->skin.head_right);
-    pixel_map_destroy(&map->skin.tail_down);
-    pixel_map_destroy(&map->skin.tail_up);
-    pixel_map_destroy(&map->skin.tail_left);
-    pixel_map_destroy(&map->skin.tail_right);
-
 
     free(map);
 }
@@ -482,16 +454,35 @@ void load_grid_map(char **lines, int *map, int width, int height)
     free(comma_indices);
 }
 
-void draw_snake_map(PixelMap *target_map, SnakeMap *map)
+void draw_snake_map(SnakeMap *map, int width, int height, Vec2i pos, glm::mat4 vp)
 {
+
+
+    map->tile_shader.use();
+    glUniform1i(glGetUniformLocation(map->tile_shader.m_program, "u_tex"), 0);
+    glUniformMatrix4fv(glGetUniformLocation(map->tile_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(vp));
+    glActiveTexture(GL_TEXTURE0);
+
+    float tile_width = (float)width / map->width;
+    float tile_height = (float)height / map->height;
+
+    map->tile_quad.m_scale[0] = tile_width;
+    map->tile_quad.m_scale[1] = tile_height;
+
     for (int y = 0; y < map->height; ++y)
     {
 	for (int x = 0; x < map->width; ++x)
 	{
-	    const int current_index = map->board_map[y * map->width + x];
-	    PixelMap *current_tile_map = &map->tile_maps[current_index];
+	    const int tile = map->board_map[y * map->width + x];
+
+	    glBindTexture(GL_TEXTURE_2D, map->tile_textures[tile]);
+	    map->tile_quad.m_position[0] = pos[0] + tile_width * x;
+	    map->tile_quad.m_position[1] = pos[1] + tile_height * y;
+	    map->tile_quad.m_position[2] = -10.f;
+	    map->tile_quad.update_model();
+	    glUniformMatrix4fv(glGetUniformLocation(map->tile_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(map->tile_quad.m_model_matrix));
 	    
-	    draw_pixmap(target_map, current_tile_map, Vec2i{x * current_tile_map->width, y * current_tile_map->height});
+	    map->tile_quad.draw();
 	}
     }
 }
@@ -545,9 +536,17 @@ void load_skin(const char *path, SnakeMap *map)
 
 #define SNAKE_LOAD_SKIN(name)						\
     snprintf(buf, 256, "%s%s%s", g_tile_dir, KEY_STR_VALUE(snake_##name##_tile), g_tile_file_extension); \
-    map->skin.name = pixel_map_create(map->tile_width, map->tile_height);	\
-    load_tile_from_file(buf, &map->skin.name);
+    load_tile_from_file(buf, &pixmap);
     
+#define CREATE_TEXTURE_FOR_SKIN(name)\
+    glGenTextures(1, &map->skin_textures.name);\
+    glBindTexture(GL_TEXTURE_2D, map->skin_textures.name);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);\
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);\
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pixmap.width, pixmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixmap.data);
+
     CREATE_KEY_STR_VAR(apple_tile);
 
     CREATE_KEY_STR_VAR(snake_vertical_tile);
@@ -568,6 +567,7 @@ void load_skin(const char *path, SnakeMap *map)
     CREATE_KEY_STR_VAR(snake_head_left_tile);
 
 
+    PixelMap pixmap = pixel_map_create(map->tile_width, map->tile_height);
     
     char buf[256];
 
@@ -576,85 +576,102 @@ void load_skin(const char *path, SnakeMap *map)
 	if (KEY_STR_COND(apple_tile))
 	{
 	    // load apple_tile
-	    snprintf(buf, 256, "%s%s%s", g_tile_dir, KEY_STR_VALUE(apple_tile), g_tile_file_extension);
-	    map->skin.apple_tile = pixel_map_create(map->tile_width, map->tile_height);
-	    load_tile_from_file(buf, &map->skin.apple_tile);
+	    snprintf(buf, 256, "%s%s%s", g_tile_dir, KEY_STR_VALUE(apple_tile), g_tile_file_extension); \
+	    load_tile_from_file(buf, &pixmap);
+	    CREATE_TEXTURE_FOR_SKIN(apple_tile);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_vertical_tile))
 	{
 	    SNAKE_LOAD_SKIN(vertical);
+	    CREATE_TEXTURE_FOR_SKIN(vertical);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_horizontal_tile))
 	{
 	    SNAKE_LOAD_SKIN(horizontal);
+	    CREATE_TEXTURE_FOR_SKIN(horizontal);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_left_up_tile))
 	{
 	    SNAKE_LOAD_SKIN(left_up);
+	    CREATE_TEXTURE_FOR_SKIN(left_up);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_right_up_tile))
 	{
 	    SNAKE_LOAD_SKIN(right_up);
+	    CREATE_TEXTURE_FOR_SKIN(right_up);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_left_down_tile))
 	{
 	    SNAKE_LOAD_SKIN(left_down);
+	    CREATE_TEXTURE_FOR_SKIN(left_down);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_right_down_tile))
 	{
 	    SNAKE_LOAD_SKIN(right_down);
+	    CREATE_TEXTURE_FOR_SKIN(right_down);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_tail_down_tile))
 	{
 	    SNAKE_LOAD_SKIN(tail_down);
+	    CREATE_TEXTURE_FOR_SKIN(tail_down);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_tail_up_tile))
 	{
 	    SNAKE_LOAD_SKIN(tail_up);
+	    CREATE_TEXTURE_FOR_SKIN(tail_up);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_tail_right_tile))
 	{
 	    SNAKE_LOAD_SKIN(tail_right);
+	    CREATE_TEXTURE_FOR_SKIN(tail_left);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_tail_left_tile))
 	{
 	    SNAKE_LOAD_SKIN(tail_left);
+	    CREATE_TEXTURE_FOR_SKIN(tail_right);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_head_down_tile))
 	{
 	    SNAKE_LOAD_SKIN(head_down);
+	    CREATE_TEXTURE_FOR_SKIN(head_down);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_head_up_tile))
 	{
 	    SNAKE_LOAD_SKIN(head_up);
+	    CREATE_TEXTURE_FOR_SKIN(head_up);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_head_right_tile))
 	{
 	    SNAKE_LOAD_SKIN(head_right);
+	    CREATE_TEXTURE_FOR_SKIN(head_right);
 	    continue;
 	}
 	else if (KEY_STR_COND(snake_head_left_tile))
 	{
 	    SNAKE_LOAD_SKIN(head_left);
+	    CREATE_TEXTURE_FOR_SKIN(head_left);
 	    continue;
 	}
     }
+
+    pixel_map_destroy(&pixmap);
     
     free(lines);
     
+#undef CREATE_TEXTURE_FOR_SKIN
 #undef SNAKE_LOAD_SKIN	
 #undef CREATE_KEY_STR_VAR
 #undef KEY_STR_COND

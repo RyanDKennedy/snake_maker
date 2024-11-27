@@ -87,7 +87,6 @@ The "share" folder contains all resources that are used by the application. Insi
 | starting_size | integer | 1 <= n | the size of the body (not including head) that the snake starts with |
 | tile_create_width | integer | 16 <= n | the width of the tile in the create tile menu  NOTE: the reason why n >= 16 is because I experienced issues. opengl doesn't actually have a minimum texture dimensions but my driver didn't support it. to get around this make a texture that is a factor of your original one, and draw each pixel as a group of pixels. |
 | tile_create_height | integer | 16 <= n | the height of the tile in the create tile menu  NOTE: the reason why n >= 16 is because I experienced issues. opengl doesn't actually have a minimum texture dimensions but my driver didn't support it. to get around this make a texture that is a factor of your original one, and draw each pixel as a group of pixels. |
-| texture_filtering | integer | 0 <= n <= 1 | this enables texture filtering on the tiles, this just looks bad though in my experience. |
 
 example:
 ```
@@ -95,7 +94,6 @@ starting_speed=10
 starting_size=1
 tile_create_width=16
 tile_create_height=16
-texture_filtering=0
 ```
 
 ### Maps (.snake)

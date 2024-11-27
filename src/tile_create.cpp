@@ -58,14 +58,12 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
     new (&ctx->bg_shader) Shader(g_shader_bg_vertex_code, g_shader_bg_fragment_code);
     
     // Create texture for background
-    int min_filter = (generic_ctx->settings.texture_filtering)? GL_LINEAR : GL_NEAREST;
-    int mag_filter = (generic_ctx->settings.texture_filtering)? GL_LINEAR : GL_NEAREST;
     glGenTextures(1, &ctx->bg_tex);
     glBindTexture(GL_TEXTURE_2D, ctx->bg_tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     char buf[256];
     snprintf(buf, 256, "%s%s", g_background_dir, "transparent.png");
