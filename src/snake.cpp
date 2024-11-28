@@ -392,7 +392,6 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 void snake_end(SnakeCtx *snake_ctx)
 {
     snake_map_destroy(snake_ctx->map);
-    free(snake_ctx->map);
     free(snake_ctx->apples);
     delete snake_ctx;
 }

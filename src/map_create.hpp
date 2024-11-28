@@ -6,6 +6,8 @@
 #include "button.hpp"
 #include "text_box.hpp"
 #include "map.hpp"
+#include "quad.hpp"
+#include "shader.hpp"
 
 #define BOARD_MAP_VIEW 0
 #define COLLISION_MAP_VIEW 1
@@ -22,7 +24,16 @@ struct MapCreateCtx
     Button selector_load_btn;
     Button selector_save_btn;
 
-    SnakeMap map;
+    SnakeMap *map;
+
+    // Transparent bg
+    Quad bg_quad;
+    Shader bg_shader;
+    GLuint bg_tex;
+
+    // Board map stuff
+    int selected_tile;
+    Vec2i map_space_dimensions;
 };
 
 

@@ -73,8 +73,6 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, data);
     stbi_image_free(data);
 
-
-
     for (int i = 0 ; i < ctx->tile_size; ++i)
     {
 	ctx->tile[i].r = 0;

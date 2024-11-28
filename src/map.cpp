@@ -19,7 +19,8 @@ SnakeMap* snake_map_create(const char *path)
     if (error)
     {
 	SNAKE_MSG("failed to read file %s\n", path);
-	exit(1);
+	free(map);
+	return NULL;
     }
     char *file_contents = (char*)file_contents_str.c_str();
     const int file_len = strlen(file_contents);
@@ -301,6 +302,7 @@ void snake_map_destroy(SnakeMap *map)
 
     free(map->board_map);
     free(map->collision_map);
+    free(map);
 }
 
 int load_tile_from_file(const char *path, PixelMap *target_map)
