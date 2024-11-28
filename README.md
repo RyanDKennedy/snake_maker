@@ -152,6 +152,8 @@ wall=2
 
 This section specifies how the board will look. It is stored as an array of integers, the integers correspond to the tile definitions section. The grid must be atleast the size specified inside the settings section with the "height" and "width" properties.
 
+If it is -1, then it is transparent.
+
 example for 5x5 map:
 ```
 [BoardMap]

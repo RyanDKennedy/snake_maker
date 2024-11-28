@@ -317,6 +317,46 @@ int main(void)
         glfwSwapBuffers(window);
     }
 
+    
+    // Stop the current state
+    switch (generic_context.game_state)
+    {
+	case GameState::menu:
+	{
+	    MenuCtx *menu_ctx = (MenuCtx*)specific_context;
+	    menu_end(menu_ctx);
+	    break;
+	}
+	case GameState::snake:
+	{
+	    SnakeCtx *snake_ctx = (SnakeCtx*)specific_context;
+	    snake_end(snake_ctx);
+	    break;
+	}
+	case GameState::scoreboard:
+	{
+	    break;
+	}
+	case GameState::settings:
+	{
+	    SettingsCtx *settings_ctx = (SettingsCtx*)specific_context;
+	    settings_end(&generic_context, settings_ctx);
+	    break;
+	}
+	case GameState::map_create:
+	{
+	    MapCreateCtx *map_create_ctx = (MapCreateCtx*)specific_context;
+	    map_create_end(map_create_ctx);		    
+	    break;
+	}
+	case GameState::tile_create:
+	{
+	    TileCreateCtx *tile_create_ctx = (TileCreateCtx*)specific_context;
+	    tile_create_end(tile_create_ctx);		    
+	    break;
+	}
+    }
+    
     pixel_map_destroy(&pixel_map);
 
     glDeleteTextures(1, &tex);

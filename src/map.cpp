@@ -248,8 +248,6 @@ SnakeMap* snake_map_create(const char *path)
     // Cleanup file parsing stuff
     free(lines);
 
-    map->aspect_ratio = (float)(map->width * map->tile_width) / (map->height * map->tile_height);
-
     new(&map->tile_quad) Quad();
     new(&map->tile_shader) Shader(g_shader_vertex_code, g_shader_fragment_code);
 
@@ -258,28 +256,34 @@ SnakeMap* snake_map_create(const char *path)
 
 void snake_map_destroy(SnakeMap *map)
 {
-    // destroy skin
-    glDeleteTextures(1, &map->skin_textures.apple_tile);
-    glDeleteTextures(1, &map->skin_textures.vertical);
-    glDeleteTextures(1, &map->skin_textures.horizontal);
-    glDeleteTextures(1, &map->skin_textures.left_up);
-    glDeleteTextures(1, &map->skin_textures.right_up);
-    glDeleteTextures(1, &map->skin_textures.left_down);
-    glDeleteTextures(1, &map->skin_textures.right_down);
-    glDeleteTextures(1, &map->skin_textures.tail_down);
-    glDeleteTextures(1, &map->skin_textures.tail_up);
-    glDeleteTextures(1, &map->skin_textures.tail_left);
-    glDeleteTextures(1, &map->skin_textures.tail_right);
-    glDeleteTextures(1, &map->skin_textures.head_down);
-    glDeleteTextures(1, &map->skin_textures.head_up);
-    glDeleteTextures(1, &map->skin_textures.head_left);
-    glDeleteTextures(1, &map->skin_textures.head_right);
 
+    // destroy skin
+    // make this not execute if dummy map
+    if (map->tiles_amt != 0)
+    {
+	glDeleteTextures(1, &map->skin_textures.apple_tile);
+	glDeleteTextures(1, &map->skin_textures.vertical);
+	glDeleteTextures(1, &map->skin_textures.horizontal);
+	glDeleteTextures(1, &map->skin_textures.left_up);
+	glDeleteTextures(1, &map->skin_textures.right_up);
+	glDeleteTextures(1, &map->skin_textures.left_down);
+	glDeleteTextures(1, &map->skin_textures.right_down);
+	glDeleteTextures(1, &map->skin_textures.tail_down);
+	glDeleteTextures(1, &map->skin_textures.tail_up);
+	glDeleteTextures(1, &map->skin_textures.tail_left);
+	glDeleteTextures(1, &map->skin_textures.tail_right);
+	glDeleteTextures(1, &map->skin_textures.head_down);
+	glDeleteTextures(1, &map->skin_textures.head_up);
+	glDeleteTextures(1, &map->skin_textures.head_left);
+	glDeleteTextures(1, &map->skin_textures.head_right);
+    }
+    
     // destroy tile pixmaps
     for (int i = 0; i < map->tiles_amt; ++i)
     {
 	pixel_map_destroy(&map->tile_maps[i]);
     }
+    free(map->tile_maps);
 
     // destroy tile names
     for (int i = 0; i < map->tiles_amt; ++i)
@@ -297,8 +301,6 @@ void snake_map_destroy(SnakeMap *map)
 
     free(map->board_map);
     free(map->collision_map);
-
-    free(map);
 }
 
 int load_tile_from_file(const char *path, PixelMap *target_map)
@@ -456,8 +458,6 @@ void load_grid_map(char **lines, int *map, int width, int height)
 
 void draw_snake_map(SnakeMap *map, int width, int height, Vec2i pos, glm::mat4 vp)
 {
-
-
     map->tile_shader.use();
     glUniform1i(glGetUniformLocation(map->tile_shader.m_program, "u_tex"), 0);
     glUniformMatrix4fv(glGetUniformLocation(map->tile_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(vp));
@@ -474,6 +474,9 @@ void draw_snake_map(SnakeMap *map, int width, int height, Vec2i pos, glm::mat4 v
 	for (int x = 0; x < map->width; ++x)
 	{
 	    const int tile = map->board_map[y * map->width + x];
+
+	    if (tile == -1)
+		continue;
 
 	    glBindTexture(GL_TEXTURE_2D, map->tile_textures[tile]);
 	    map->tile_quad.m_position[0] = pos[0] + tile_width * x;

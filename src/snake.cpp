@@ -29,10 +29,12 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
     snake_ctx->map = snake_map_create(snake_ctx->map_path);
 
     // Configure maps model matrix
-    if (snake_ctx->map->aspect_ratio > 1)
+    float aspect_ratio = (float)(snake_ctx->map->width * snake_ctx->map->tile_width) / (snake_ctx->map->height * snake_ctx->map->tile_height);
+
+    if (aspect_ratio > 1)
     {
 	float width = generic_ctx->pix_width * 0.75;
-	float height = width / snake_ctx->map->aspect_ratio;
+	float height = width / aspect_ratio;
 
 	snake_ctx->map_width = width;
 	snake_ctx->map_height = height;
@@ -42,7 +44,7 @@ SnakeCtx* snake_start(GenericCtx *generic_ctx, const char *map_name)
     else
     {
 	float height = generic_ctx->pix_height * 0.75;
-	float width = height * snake_ctx->map->aspect_ratio;
+	float width = height * aspect_ratio;
 
 	snake_ctx->map_width = width;
 	snake_ctx->map_height = height;
@@ -390,6 +392,7 @@ GameReturnCode snake_run(PixelMap *pixel_map, GenericCtx *generic_ctx, SnakeCtx 
 void snake_end(SnakeCtx *snake_ctx)
 {
     snake_map_destroy(snake_ctx->map);
+    free(snake_ctx->map);
     free(snake_ctx->apples);
     delete snake_ctx;
 }

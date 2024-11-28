@@ -5,6 +5,7 @@
 #include "pixel_map.hpp"
 #include "button.hpp"
 #include "text_box.hpp"
+#include "map.hpp"
 
 #define BOARD_MAP_VIEW 0
 #define COLLISION_MAP_VIEW 1
@@ -21,7 +22,7 @@ struct MapCreateCtx
     Button selector_load_btn;
     Button selector_save_btn;
 
-
+    SnakeMap map;
 };
 
 

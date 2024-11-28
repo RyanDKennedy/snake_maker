@@ -303,7 +303,7 @@ GameReturnCode tile_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, Til
 
     // Drawing text box
     text_box_parse_key_list(&tile_create_ctx->text, generic_ctx->key_list);
-    draw_text_box(pixel_map, &tile_create_ctx->text);
+    draw_text_box(pixel_map, &tile_create_ctx->text, true);
     draw_sentence(pixel_map, "name", 8, 2, Vec2i{80, 708}, Vec3i{255, 255, 0});
 
     // save btn

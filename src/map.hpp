@@ -30,8 +30,6 @@ struct SnakeMap
     Vec2i starting_pos;
     int starting_direction; // 0 = up, 1 = right, 2 = down, 3 = left
 
-    float aspect_ratio;
-
     struct
     {
 	GLuint apple_tile;
