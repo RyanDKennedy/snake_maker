@@ -290,6 +290,7 @@ int main(void)
 
 	}
 
+#ifndef NDEBUG
 	// Draw Top Bar
 	draw_rectangle(&pixel_map, pix_width, 50, Vec2i{0, 750}, Vec3i{50, 50, 50}, 255);
 	draw_sentence(&pixel_map, "snake maker", 8, 3, Vec2i{30, 760}, Vec3i{0, 255, 0});
@@ -297,6 +298,7 @@ int main(void)
 	memset(buf, 0, 255);
 	snprintf(buf, 255, "fps %.2lf", 1.0 / generic_context.delta_time);
 	draw_sentence(&pixel_map, buf, 8, 3, Vec2i{550, 760}, Vec3i{255, 0, 0});
+#endif
 
 	// Drawing the pixmap onto the screen
 	glActiveTexture(GL_TEXTURE0);

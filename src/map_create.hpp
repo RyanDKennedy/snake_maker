@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 
 #include "common.hpp"
 #include "context.hpp"
@@ -54,6 +54,11 @@ struct MapCreateCtx
     int tile_buttons_amt;
     Quad tile_quad;
     Shader tile_shader;
+
+    // Collision map stuff
+    GLuint cross_tex;
+    GLuint check_tex;
+
 };
 
 

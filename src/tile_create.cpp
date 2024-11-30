@@ -66,7 +66,7 @@ TileCreateCtx* tile_create_start(GenericCtx *generic_ctx)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     char buf[256];
-    snprintf(buf, 256, "%s%s", g_background_dir, "transparent.png");
+    snprintf(buf, 256, "%s%s", g_resources_dir, "transparent.png");
     int w, h, ch;
     void *data = stbi_load(buf, &w, &h, &ch, 0);
     int format = (ch == 4)? GL_RGBA : GL_RGB;

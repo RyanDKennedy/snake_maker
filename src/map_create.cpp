@@ -4,6 +4,7 @@
 #include "drawing.hpp"
 #include "game_state.hpp"
 #include "map.hpp"
+#include "pixel_map.hpp"
 #include "text_box.hpp"
 
 #include <cstdlib>
@@ -161,14 +162,15 @@ MapCreateCtx* map_create_start(GenericCtx *generic_ctx)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    char buf[256];
-    snprintf(buf, 256, "%s%s", g_background_dir, "transparent.png");
-    int w, h, ch;
-    void *data = stbi_load(buf, &w, &h, &ch, 0);
-    int format = (ch == 4)? GL_RGBA : GL_RGB;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, data);
-    stbi_image_free(data);
-
+    {
+	char buf[256];
+	snprintf(buf, 256, "%s%s", g_resources_dir, "transparent.png");
+	int w, h, ch;
+	void *data = stbi_load(buf, &w, &h, &ch, 0);
+	int format = (ch == 4)? GL_RGBA : GL_RGB;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, format, GL_UNSIGNED_BYTE, data);
+	stbi_image_free(data);
+    }
 
     // Board Map stuff
 
@@ -179,7 +181,6 @@ MapCreateCtx* map_create_start(GenericCtx *generic_ctx)
     new(&ctx->tile_shader) Shader(g_shader_vertex_code, g_shader_fragment_code);
 
     // Tiles
-
 
     {
 	float tile_aspect_ratio = (float)ctx->map->tile_width / ctx->map->tile_height;
@@ -230,6 +231,38 @@ MapCreateCtx* map_create_start(GenericCtx *generic_ctx)
     memcpy(&ctx->prev_tile_line_btn.bg_hover_color, &ctx->prev_tile_line_btn.fg_color, sizeof(Vec3i));
     memcpy(&ctx->prev_tile_line_btn.fg_hover_color, &ctx->prev_tile_line_btn.bg_color, sizeof(Vec3i));
 
+    // Collision map stuff
+
+    {
+	PixelMap pixel_map = pixel_map_create(16, 16);
+
+	char buf[256];
+
+	snprintf(buf, 256, "%s%s%s", g_resources_dir, "check", g_tile_file_extension);
+	load_tile_from_file(buf, &pixel_map);
+
+	glGenTextures(1, &ctx->check_tex);
+	glBindTexture(GL_TEXTURE_2D, ctx->check_tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel_map.data);
+	
+	snprintf(buf, 256, "%s%s%s", g_resources_dir, "cross", g_tile_file_extension);
+	load_tile_from_file(buf, &pixel_map);
+
+	glGenTextures(1, &ctx->cross_tex);
+	glBindTexture(GL_TEXTURE_2D, ctx->cross_tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel_map.data);
+
+
+	pixel_map_destroy(&pixel_map);
+    }
 
     return ctx;
 }
@@ -442,6 +475,88 @@ GameReturnCode map_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MapC
 	case COLLISION_MAP_VIEW:
 	{
 
+	    Vec2i bg_pos = {(int)map_create_ctx->bg_quad.m_position[0], (int)map_create_ctx->bg_quad.m_position[1]};
+
+	    if (generic_ctx->mouse_right_clicked)
+	    {
+		int x = (generic_ctx->mouse_pos[0] - bg_pos[0]) / (map_create_ctx->bg_quad.m_scale[0]/map_create_ctx->map->width);
+		int y = (generic_ctx->mouse_pos[1] - bg_pos[1]) / (map_create_ctx->bg_quad.m_scale[1]/map_create_ctx->map->height);
+
+		if (x >= 0 && x < map_create_ctx->map->width && y >= 0 && y < map_create_ctx->map->height)
+		{
+		    map_create_ctx->map->collision_map[y * map_create_ctx->map->width + x] = 0;
+		}
+	    }
+	    if (generic_ctx->mouse_clicked)
+	    {
+		int x = (generic_ctx->mouse_pos[0] - bg_pos[0]) / (map_create_ctx->bg_quad.m_scale[0]/map_create_ctx->map->width);
+		int y = (generic_ctx->mouse_pos[1] - bg_pos[1]) / (map_create_ctx->bg_quad.m_scale[1]/map_create_ctx->map->height);
+
+		if (x >= 0 && x < map_create_ctx->map->width && y >= 0 && y < map_create_ctx->map->height)
+		{
+		    map_create_ctx->map->collision_map[y * map_create_ctx->map->width + x] = 1;
+		}
+	    }
+
+	    // Draw transparent bg
+	    glBindTexture(GL_TEXTURE_2D, map_create_ctx->bg_tex);
+	    map_create_ctx->bg_shader.use();
+	    glUniform1i(glGetUniformLocation(map_create_ctx->bg_shader.m_program, "u_tex"), 0);
+	    glUniformMatrix4fv(glGetUniformLocation(map_create_ctx-> bg_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_ctx->vp_matrix));
+	    glUniformMatrix4fv(glGetUniformLocation(map_create_ctx->bg_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(map_create_ctx->bg_quad.m_model_matrix));
+	    glUniform1i(glGetUniformLocation(map_create_ctx->bg_shader.m_program, "u_tile_x_amt"), map_create_ctx->map->width);
+	    glUniform1i(glGetUniformLocation(map_create_ctx->bg_shader.m_program, "u_tile_y_amt"), map_create_ctx->map->height);
+	    map_create_ctx->bg_quad.draw();
+
+	    // draw the board map
+	    draw_rectangle(pixel_map, map_create_ctx->bg_quad.m_scale[0], map_create_ctx->bg_quad.m_scale[1], bg_pos, Vec3i{0, 0, 0}, 0);
+	    draw_snake_map(map_create_ctx->map, map_create_ctx->bg_quad.m_scale[0], map_create_ctx->bg_quad.m_scale[1], bg_pos, generic_ctx->vp_matrix);
+
+
+	    // draw the pixel map on top
+	    {
+		map_create_ctx->map->tile_shader.use();
+		glUniform1i(glGetUniformLocation(map_create_ctx->map->tile_shader.m_program, "u_tex"), 0);
+		glUniformMatrix4fv(glGetUniformLocation(map_create_ctx->map->tile_shader.m_program, "u_vp"), 1, GL_FALSE, glm::value_ptr(generic_ctx->vp_matrix));
+		glActiveTexture(GL_TEXTURE0);
+		
+		float tile_width = (float)map_create_ctx->bg_quad.m_scale[0] / map_create_ctx->map->width;
+		float tile_height = (float)map_create_ctx->bg_quad.m_scale[1] / map_create_ctx->map->height;
+		
+		map_create_ctx->map->tile_quad.m_scale[0] = tile_width;
+		map_create_ctx->map->tile_quad.m_scale[1] = tile_height;
+		map_create_ctx->map->tile_quad.m_position[2] = -9.f;
+		
+		for (int y = 0; y < map_create_ctx->map->height; ++y)
+		{
+		    for (int x = 0; x < map_create_ctx->map->width; ++x)
+		    {
+			GLuint tex;
+			if (map_create_ctx->map->collision_map[x + y * map_create_ctx->map->width] == 0)
+			{
+			    tex = map_create_ctx->cross_tex;
+			}
+			else if (map_create_ctx->map->collision_map[x + y * map_create_ctx->map->width] == 1)
+			{
+			    tex = map_create_ctx->check_tex;
+			}
+			else
+			{
+			    continue;
+			}
+			
+			glBindTexture(GL_TEXTURE_2D, tex);
+			map_create_ctx->map->tile_quad.m_position[0] = bg_pos[0] + tile_width * x;
+			map_create_ctx->map->tile_quad.m_position[1] = bg_pos[1] + tile_height * y;
+			
+			map_create_ctx->map->tile_quad.update_model();
+			glUniformMatrix4fv(glGetUniformLocation(map_create_ctx->map->tile_shader.m_program, "u_model"), 1, GL_FALSE, glm::value_ptr(map_create_ctx->map->tile_quad.m_model_matrix));
+			
+			map_create_ctx->map->tile_quad.draw();
+		    }
+		}
+		
+	    }
 	    break;
 	}
 
@@ -465,6 +580,9 @@ GameReturnCode map_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MapC
 
 void map_create_end(MapCreateCtx *map_create_ctx)
 {
+    glDeleteTextures(1, &map_create_ctx->cross_tex);
+    glDeleteTextures(1, &map_create_ctx->check_tex);
+
     map_create_ctx->tile_quad.~Quad();
     map_create_ctx->tile_shader.~Shader();
 
