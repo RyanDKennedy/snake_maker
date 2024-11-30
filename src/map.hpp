@@ -30,6 +30,7 @@ struct SnakeMap
     Vec2i starting_pos;
     int starting_direction; // 0 = up, 1 = right, 2 = down, 3 = left
 
+    char skin[256];
     struct
     {
 	GLuint apple_tile;
@@ -53,6 +54,7 @@ struct SnakeMap
 };
 
 SnakeMap* snake_map_create(const char *path);
+void snake_map_write_to_file(SnakeMap *map, const char *path);
 void snake_map_destroy(SnakeMap *map);
 
 int load_tile_from_file(const char *path, PixelMap *target_map);

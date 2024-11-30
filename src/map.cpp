@@ -177,6 +177,7 @@ SnakeMap* snake_map_create(const char *path)
 	// load skin
 	char buf[256];
 	snprintf(buf, 256, "%s%s%s", g_skin_dir, skin, g_skin_file_extension);
+	strcpy(map->skin, skin);
 	load_skin(buf, map);
 
 
@@ -440,9 +441,9 @@ void load_grid_map(char **lines, int *map, int width, int height)
 	// Get comma indices on the line
 	int num = 0;
 	comma_indices[num++] = -1;
-	for (int i = 0; i < strlen(lines[0]) && num < width; ++i)
+	for (int i = 0; i < strlen(lines[line_num]) && num < width; ++i)
 	{
-	    if (lines[0][i] == ',')
+	    if (lines[line_num][i] == ',')
 	    {
 		comma_indices[num++] = i;
 	    }	    
@@ -681,4 +682,115 @@ void load_skin(const char *path, SnakeMap *map)
 #undef CREATE_KEY_STR_VAR
 #undef KEY_STR_COND
 #undef KEY_STR_VALUE
+}
+
+void snake_map_write_to_file(SnakeMap *map, const char *path)
+{
+    FILE *fd = fopen(path, "w+");
+    if (fd == NULL)
+    {
+	exit(1);
+    }
+
+    char buf[256];
+    memset(buf, 0, 256);
+
+    // Settings
+    {
+#define WRITE_FIELD_TO_FILE(name, value, value_descriptor)	\
+	{								\
+	    const char *name##_str = #name "=";				\
+	    const size_t name##_str_len = strlen(name##_str);		\
+	    fwrite(name##_str, sizeof(char), name##_str_len, fd);	\
+	    size_t amt = snprintf(buf, 256, value_descriptor "\n", value); \
+	    fwrite(buf, sizeof(char), amt, fd);				\
+	}
+	
+	const char *settings_str = "[Settings]\n";
+	fwrite(settings_str, sizeof(char), strlen(settings_str), fd);
+
+	WRITE_FIELD_TO_FILE(width, map->width, "%d");
+	WRITE_FIELD_TO_FILE(height, map->height, "%d");
+	WRITE_FIELD_TO_FILE(tile_width, map->tile_width, "%d");
+	WRITE_FIELD_TO_FILE(tile_height, map->tile_height, "%d");
+	WRITE_FIELD_TO_FILE(starting_x, map->starting_pos[0], "%d");
+	WRITE_FIELD_TO_FILE(starting_y, map->starting_pos[1], "%d");
+	WRITE_FIELD_TO_FILE(starting_direction, map->starting_direction, "%d");
+	WRITE_FIELD_TO_FILE(skin, map->skin, "%s");
+
+#undef WRITE_FIELD_TO_FILE
+    }
+
+    // Tile Definitions
+    {
+#define WRITE_TILE_TO_FILE(num, name)\
+	{						\
+	    size_t amt = snprintf(buf, 256, "%s=%d\n", name, num);	\
+	    fwrite(buf, sizeof(char), amt, fd);				\
+	}								\
+
+	const char *tile_def_str = "[TileDefinitions]\n";
+	fwrite(tile_def_str, sizeof(char), strlen(tile_def_str), fd);
+
+	for (int i = 0; i < map->tiles_amt; ++i)
+	{
+	    WRITE_TILE_TO_FILE(i, map->tile_names[i]);
+	}
+
+#undef WRITE_TILE_TO_FILE
+    }
+
+    // Board Map
+    {
+	const char *board_map_str = "[BoardMap]\n";
+	fwrite(board_map_str, sizeof(char), strlen(board_map_str), fd);	
+
+	for (int row = 0; row < map->height; ++row)
+	{
+	    memset(buf, 0, 256);
+
+	    for (int col = 0; col < map->width - 1; ++col)
+	    {
+		char block[16];
+		snprintf(block, 16, "%d,", map->board_map[row * map->width + col]);
+		strcat(buf, block);
+	    }
+
+	    char block[16];
+	    snprintf(block, 16, "%d\n", map->board_map[row * map->width + map->width - 1]);
+	    strcat(buf, block);
+
+	    fwrite(buf, sizeof(char), strlen(buf), fd);
+	}
+
+    }
+
+    // Collision Map
+    {
+	const char *collision_map_str = "[CollisionMap]\n";
+	fwrite(collision_map_str, sizeof(char), strlen(collision_map_str), fd);	
+
+	for (int row = 0; row < map->height; ++row)
+	{
+	    memset(buf, 0, 256);
+
+	    for (int col = 0; col < map->width - 1; ++col)
+	    {
+		char block[16];
+		snprintf(block, 16, "%d,", map->collision_map[row * map->width + col]);
+		strcat(buf, block);
+	    }
+
+	    char block[16];
+	    snprintf(block, 16, "%d\n", map->collision_map[row * map->width + map->width - 1]);
+	    strcat(buf, block);
+
+	    fwrite(buf, sizeof(char), strlen(buf), fd);
+	}
+    }
+
+    const char *end_str = "[END]";
+    fwrite(end_str, sizeof(char), strlen(end_str), fd);	    
+
+    fclose(fd);    
 }

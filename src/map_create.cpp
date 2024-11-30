@@ -266,7 +266,10 @@ GameReturnCode map_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MapC
 	// Save
 	if (is_inside_collision_box(&map_create_ctx->selector_save_btn.col_box, generic_ctx->mouse_pos))
 	{
-	    printf("saving\n");	    
+	    char buf[256];
+	    snprintf(buf, 256, "%s%s%s", g_map_dir, map_create_ctx->selector.text, g_map_file_extension);
+
+	    snake_map_write_to_file(map_create_ctx->map, buf);
 	}
 
     }
