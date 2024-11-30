@@ -228,7 +228,7 @@ SnakeMap* snake_map_create(const char *path)
 	    exit(1);
 	}
 	
-	strcpy(map->tile_names[tile_number], tile_path);
+	strcpy(map->tile_names[tile_number], tile_name);
 	glGenTextures(1, &map->tile_textures[tile_number]);
 	glBindTexture(GL_TEXTURE_2D, map->tile_textures[tile_number]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

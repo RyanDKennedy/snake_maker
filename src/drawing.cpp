@@ -218,7 +218,7 @@ void draw_button(PixelMap *pixel_map, Button *button, bool hover)
     }
 
     // truncate text
-    char text[255];
+    char text[256];
     const int char_size = button->font_size * button->font_mag;
     snprintf(text, button->width / char_size + 1, "%s", button->text);
 

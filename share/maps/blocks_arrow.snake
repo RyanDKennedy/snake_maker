@@ -10,6 +10,8 @@ skin=arrow
 [TileDefinitions]
 blocks_empty=0
 blocks_solid=1
+blocks_fill=2
+blocks_apple=3
 [BoardMap]
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
