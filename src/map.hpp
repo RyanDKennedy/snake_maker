@@ -21,7 +21,10 @@ struct SnakeMap
     int *board_map; // this is a map of indices to tile_maps array
 
     char **tile_names;
+
+    // DONT USE THIS V
     PixelMap *tile_maps; // array of pixelmaps for each tile at index of number in map file
+
     int tiles_amt;
     GLuint *tile_textures;
     Quad tile_quad;
@@ -59,6 +62,7 @@ void snake_map_destroy(SnakeMap *map);
 
 int load_tile_from_file(const char *path, PixelMap *target_map);
 void write_tile_to_file(const char *path, RGBAPixel *tile_data, int tile_width, int tile_height);
+void get_dimensions_of_tile_file(const char *path, int *width, int *height);
 void load_grid_map(char **lines, int *map, int width, int height);
 void load_skin(const char *path, SnakeMap *map);
 

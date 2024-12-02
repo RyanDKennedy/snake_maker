@@ -258,7 +258,6 @@ SnakeMap* snake_map_create(const char *path)
 
 void snake_map_destroy(SnakeMap *map)
 {
-
     // destroy skin
     // make this not execute if dummy map
     if (map->tiles_amt != 0)
@@ -389,6 +388,39 @@ int load_tile_from_file(const char *path, PixelMap *target_map)
     free(lines);
 
     return 0;
+}
+
+void get_dimensions_of_tile_file(const char *path, int *width, int *height)
+{
+    bool error;
+    std::string file_contents_str = read_file(path, &error);
+    if (error)
+    {
+	SNAKE_MSG("failed to read file %s\n", path);
+	*width = -1;
+	*height = -1;
+	return;
+    }
+
+    char *file_contents = (char*)file_contents_str.c_str();
+    const int file_len = strlen(file_contents);
+    
+    *height = 1;
+    for (int i = 0; i < file_len; ++i)
+    {
+	if (file_contents[i] == '\n')
+	    *height += 1;
+    }
+
+    *width = 0;
+    for (int i = 0; i < file_len; ++i)
+    {
+	if (file_contents[i] == ',' && file_contents[i - 1] == ')')
+	    *width += 1;
+
+	if (file_contents[i] == '\n')
+	    break;
+    }
 }
 
 void write_tile_to_file(const char *path, RGBAPixel *tile_data, int tile_width, int tile_height)

@@ -59,6 +59,17 @@ struct MapCreateCtx
     GLuint cross_tex;
     GLuint check_tex;
 
+    // Tile manager stuff
+    int available_tiles_amt;
+    Button *available_tiles;
+    int current_tile_page;
+    int tile_page_size;
+    int tile_page_amt;
+    int tile_page_width;
+    int tile_page_height;
+    Button tile_page_next_btn;
+    Button tile_page_prev_btn;
+
 };
 
 
@@ -69,3 +80,6 @@ GameReturnCode map_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MapC
 void map_create_end(MapCreateCtx *map_create_ctx);
 
 void map_create_load_map(MapCreateCtx *map_create_ctx);
+
+void map_create_add_tile(const char *name, MapCreateCtx *map_create_ctx);
+void map_create_remove_tile(int index, MapCreateCtx *map_create_ctx);
