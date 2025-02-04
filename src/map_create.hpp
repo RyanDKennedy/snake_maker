@@ -1,4 +1,4 @@
- #pragma once
+#pragma once
 
 #include "common.hpp"
 #include "context.hpp"
@@ -8,6 +8,7 @@
 #include "map.hpp"
 #include "quad.hpp"
 #include "shader.hpp"
+#include "increment_value.hpp"
 
 #define BOARD_MAP_VIEW 0
 #define COLLISION_MAP_VIEW 1
@@ -70,6 +71,15 @@ struct MapCreateCtx
     Button tile_page_next_btn;
     Button tile_page_prev_btn;
 
+    // Settings stuff
+    Button settings_save_btn;
+    IncrementValue settings_width;
+    IncrementValue settings_height;
+    IncrementValue settings_tile_width;
+    IncrementValue settings_tile_height;
+    IncrementValue settings_starting_x;
+    IncrementValue settings_starting_y;
+    
 };
 
 

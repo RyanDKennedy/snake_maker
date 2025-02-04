@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "drawing.hpp"
 #include "game_state.hpp"
+#include "increment_value.hpp"
 #include "map.hpp"
 #include "pixel_map.hpp"
 #include "text_box.hpp"
@@ -361,6 +362,18 @@ MapCreateCtx* map_create_start(GenericCtx *generic_ctx)
 	
 
 
+    }
+
+    // settings stuff
+    {
+	ctx->settings_save_btn = create_button("save", 200, 50, Vec2i{300, 550}, Vec3i{50, 200, 50}, Vec3i{255, 255, 255}, 8, 2);
+	memcpy(&ctx->settings_save_btn.bg_hover_color, &ctx->settings_save_btn.fg_color, sizeof(Vec3i));
+	memcpy(&ctx->settings_save_btn.fg_hover_color, &ctx->settings_save_btn.bg_color, sizeof(Vec3i));
+
+	ctx->settings_width = create_increment_value(ctx->map->width, "width", Vec2i{0, 400}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
+	ctx->settings_height = create_increment_value(ctx->map->height, "height", Vec2i{0, 350}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
+	ctx->settings_tile_width = create_increment_value(ctx->map->tile_width, "tile_width", Vec2i{0, 300}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});
+	ctx->settings_tile_height = create_increment_value(ctx->map->tile_height, "tile_height", Vec2i{0, 250}, Vec3i{250, 0, 0}, Vec3i{255, 255, 255});	
     }
     
     return ctx;
@@ -737,6 +750,22 @@ GameReturnCode map_create_run(PixelMap *pixel_map, GenericCtx *generic_ctx, MapC
 
 	case SETTINGS_VIEW:
 	{
+	    bool in_button; // reused variable
+
+	    // Updating increment values
+	    update_increment_value(&map_create_ctx->settings_width, generic_ctx->mouse_pos, generic_ctx->mouse_clicked, generic_ctx->mouse_released);
+	    update_increment_value(&map_create_ctx->settings_height, generic_ctx->mouse_pos, generic_ctx->mouse_clicked, generic_ctx->mouse_released);
+	    update_increment_value(&map_create_ctx->settings_tile_width, generic_ctx->mouse_pos, generic_ctx->mouse_clicked, generic_ctx->mouse_released);
+	    update_increment_value(&map_create_ctx->settings_tile_height, generic_ctx->mouse_pos, generic_ctx->mouse_clicked, generic_ctx->mouse_released);
+
+	    // Drawing
+	    in_button = is_inside_collision_box(&map_create_ctx->settings_save_btn.col_box, generic_ctx->mouse_pos);
+	    draw_button(pixel_map, &map_create_ctx->settings_save_btn, in_button);
+
+	    draw_increment_value(pixel_map, &map_create_ctx->settings_width, generic_ctx->mouse_pos);
+	    draw_increment_value(pixel_map, &map_create_ctx->settings_height, generic_ctx->mouse_pos);
+	    draw_increment_value(pixel_map, &map_create_ctx->settings_tile_width, generic_ctx->mouse_pos);
+	    draw_increment_value(pixel_map, &map_create_ctx->settings_tile_height, generic_ctx->mouse_pos);
 
 	    break;
 	}
